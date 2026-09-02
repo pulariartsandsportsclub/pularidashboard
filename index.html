@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulari Club - Income & Expense Admin Portal</title>
+  <meta name="description" content="Financial management and tracking dashboard for Pulari Arts & Sports Club with Google Sheets real-time integration.">
+  
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="PULARI.png">
+  
+  <!-- Master Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Chart.js UMD, SheetJS & jsPDF CDNs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <!-- ================= LOGIN SCREEN OVERLAY ================= -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo-wrap">
+          <img src="PULARI.png" alt="Pulari Club Logo" class="login-logo-img">
+        </div>
+        <h2 class="login-title">PULARI ARTS & SPORTS CLUB</h2>
+        <p class="login-subtitle">Admin Financial Portal</p>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <div id="loginErrorAlert" class="login-alert" style="display: none;">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="loginErrorMsg">Invalid User ID or Password</span>
+        </div>
+
+        <div class="form-group">
+          <label for="loginUsername"><i class="fa-solid fa-user-shield" style="margin-right: 6px; color: var(--brand-primary);"></i> User ID</label>
+          <input type="text" id="loginUsername" class="form-control login-input" placeholder="Enter User ID (admin)" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword"><i class="fa-solid fa-lock" style="margin-right: 6px; color: var(--brand-primary);"></i> Password</label>
+          <div class="password-input-wrap">
+            <input type="password" id="loginPassword" class="form-control login-input" placeholder="Enter Password" required autocomplete="current-password">
+            <button type="button" class="btn-toggle-password" id="togglePasswordBtn" title="Show/Hide Password">
+              <i class="fa-solid fa-eye" id="passwordEyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary login-btn" id="loginSubmitBtn">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span>Sign In to Dashboard</span>
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <span>Protected Admin System • Pulari Arts & Sports Club</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-wrapper" id="appMainWrapper" style="display: none;">
+    <main class="main-content">
+      
+      <!-- Top Navigation Bar -->
+      <header class="top-navbar">
+        <div class="brand-section">
+          <div class="brand-logo-badge">
+            <img src="PULARI.png" alt="Pulari Arts & Sports Club Logo" class="brand-logo-img">
+          </div>
+          <div>
+            <h1 class="brand-title">PULARI ARTS & SPORTS CLUB</h1>
+            <div class="brand-subtitle">Financial Admin Dashboard</div>
+          </div>
+        </div>
+        
+        <div class="nav-actions">
+          <div class="sync-status-badge" id="syncStatusBadge" title="Click to open Google Sheet Settings">
+            <span class="status-dot" id="syncStatusDot"></span>
+            <span id="syncStatusText">Connecting...</span>
+          </div>
+
+          <button class="btn btn-secondary btn-icon-only" id="refreshBtn" title="Sync now with Google Sheets">
+            <i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i>
+          </button>
+          
+          <button class="btn btn-secondary btn-icon-only" id="settingsModalOpenBtn" title="Google Sheet Configuration">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+
+          <button class="btn btn-secondary btn-icon-only" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+            <i class="fa-solid fa-moon" id="themeIcon"></i>
+          </button>
+
+          <button class="btn btn-secondary btn-icon-only" id="logoutBtn" title="Logout from Admin Dashboard">
+            <i class="fa-solid fa-right-from-bracket" style="color: var(--expense-color);"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Action Banner & Greeting -->
+      <section class="action-banner">
+        <div class="section-greeting">
+          <h2>Financial Overview</h2>
+          <p id="currentDateDisplay">Real-time ledger and accounts management</p>
+        </div>
+
+        <div class="action-buttons-group">
+          <button class="btn btn-income" id="openAddIncomeBtn">
+            <i class="fa-solid fa-circle-plus"></i>
+            <span>Add Income</span>
+          </button>
+          
+          <button class="btn btn-expense" id="openAddExpenseBtn">
+            <i class="fa-solid fa-circle-minus"></i>
+            <span>Add Expense</span>
+          </button>
+          
+          <button class="btn btn-secondary" id="exportExcelBtn" title="Download Excel (.xlsx) spreadsheet with Income & Expenses tabs">
+            <i class="fa-solid fa-file-excel" style="color: #10b981;"></i>
+            <span>Export Excel</span>
+          </button>
+          
+          <button class="btn btn-secondary" id="exportPdfBtn" title="Generate and download formatted PDF statement">
+            <i class="fa-solid fa-file-pdf" style="color: #f43f5e;"></i>
+            <span>Export PDF</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Metrics Stat Cards Grid -->
+      <section class="metrics-grid">
+        <!-- Total Income -->
+        <div class="metric-card card-income">
+          <div class="metric-header">
+            <span class="metric-title">Total Income</span>
+            <div class="metric-icon-box">
+              <i class="fa-solid fa-arrow-trend-up"></i>
+            </div>
+          </div>
+          <div class="metric-value" id="statTotalIncome">₹0.00</div>
+          <div class="metric-footer">
+            <span class="metric-badge positive" id="incomeBadge"><i class="fa-solid fa-arrow-up"></i> Total Inflow</span>
+            <span id="incomeCountLabel">0 Entries</span>
+          </div>
+        </div>
+
+        <!-- Total Expenses -->
+        <div class="metric-card card-expense">
+          <div class="metric-header">
+            <span class="metric-title">Total Expenses</span>
+            <div class="metric-icon-box">
+              <i class="fa-solid fa-arrow-trend-down"></i>
+            </div>
+          </div>
+          <div class="metric-value" id="statTotalExpense">₹0.00</div>
+          <div class="metric-footer">
+            <span class="metric-badge negative" id="expenseBadge"><i class="fa-solid fa-arrow-down"></i> Total Outflow</span>
+            <span id="expenseCountLabel">0 Entries</span>
+          </div>
+        </div>
+
+        <!-- Net Balance -->
+        <div class="metric-card card-balance">
+          <div class="metric-header">
+            <span class="metric-title">Net Available Balance</span>
+            <div class="metric-icon-box">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+          </div>
+          <div class="metric-value" id="statNetBalance">₹0.00</div>
+          <div class="metric-footer">
+            <span class="metric-badge" id="netBalanceBadge">Income - Expense</span>
+            <span id="netStatusText">Healthy</span>
+          </div>
+        </div>
+
+        <!-- Transactions & Monthly Inflow -->
+        <div class="metric-card card-count">
+          <div class="metric-header">
+            <span class="metric-title">This Month Net</span>
+            <div class="metric-icon-box">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+          </div>
+          <div class="metric-value" id="statThisMonthNet">₹0.00</div>
+          <div class="metric-footer">
+            <span class="metric-badge" id="monthBadge">Active Period</span>
+            <span id="statTotalTxnCount">0 total txns</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics Charts Section -->
+      <section class="charts-grid">
+        <!-- Cash Flow Bar/Line Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Cash Flow & Monthly Trend</div>
+              <div class="chart-subtitle">Monthly breakdown of Income vs Expenses</div>
+            </div>
+            <div class="btn-group">
+              <select class="filter-select" id="chartTimeframeSelect">
+                <option value="6">Last 6 Months</option>
+                <option value="12">Last 12 Months</option>
+              </select>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="cashflowChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Category Distribution Chart -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title" id="categoryChartTitle">Category Breakdown</div>
+              <div class="chart-subtitle" id="categoryChartSubtitle">Distribution of Inflows & Outflows</div>
+            </div>
+            <div class="chart-toggle-group">
+              <button type="button" class="chart-toggle-btn active" data-cat-type="all" id="catBtnAll">
+                <i class="fa-solid fa-layer-group"></i> All
+              </button>
+              <button type="button" class="chart-toggle-btn" data-cat-type="income" id="catBtnIncome">
+                <i class="fa-solid fa-arrow-trend-up"></i> Income
+              </button>
+              <button type="button" class="chart-toggle-btn" data-cat-type="expense" id="catBtnExpense">
+                <i class="fa-solid fa-arrow-trend-down"></i> Expense
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Transaction Ledger Section -->
+      <section class="ledger-section">
+        <div class="ledger-header">
+          <div class="ledger-title-group">
+            <h3>Transaction Ledger</h3>
+            <p>Detailed list of all receipts, donations, tournament fees, and club expenditures</p>
+          </div>
+          
+          <div class="type-tabs">
+            <button class="type-tab-btn active" data-filter-type="all">All (<span id="countAll">0</span>)</button>
+            <button class="type-tab-btn" data-filter-type="income">Income (<span id="countIncome">0</span>)</button>
+            <button class="type-tab-btn" data-filter-type="expense">Expense (<span id="countExpense">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="filters-bar">
+          <div class="search-input-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by title, donor, notes...">
+          </div>
+
+          <select id="categoryFilter" class="filter-select">
+            <option value="all">All Categories</option>
+            <!-- Injected via JS -->
+          </select>
+
+          <select id="paymentModeFilter" class="filter-select">
+            <option value="all">All Payment Modes</option>
+            <option value="UPI">UPI / GPay / PhonePe</option>
+            <option value="Cash">Cash</option>
+            <option value="Bank Transfer">Bank Transfer</option>
+            <option value="Cheque">Cheque</option>
+          </select>
+
+          <select id="sortBySelect" class="filter-select">
+            <option value="date-desc">Date (Newest First)</option>
+            <option value="date-asc">Date (Oldest First)</option>
+            <option value="amount-desc">Amount (Highest First)</option>
+            <option value="amount-asc">Amount (Lowest First)</option>
+          </select>
+          
+          <button class="btn btn-secondary" id="resetFiltersBtn" title="Reset all filters">
+            <i class="fa-solid fa-filter-circle-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="table-responsive">
+          <table class="transactions-table" id="transactionsTable">
+            <thead>
+              <tr>
+                <th>Transaction</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Payment Mode</th>
+                <th>Notes / Payer</th>
+                <th style="text-align: right;">Amount</th>
+                <th style="text-align: center; width: 60px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsTableBody">
+              <!-- Dynamically populated via JS -->
+            </tbody>
+          </table>
+          
+          <div id="tableEmptyState" class="empty-state" style="display: none;">
+            <i class="fa-solid fa-receipt"></i>
+            <p>No transactions found matching the selected filters.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. Add Income Modal -->
+  <div class="modal-backdrop" id="addIncomeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-header-icon income">
+            <i class="fa-solid fa-arrow-trend-up"></i>
+          </div>
+          <h3>Record New Income</h3>
+        </div>
+        <button class="modal-close-btn" data-close-modal="addIncomeModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="addIncomeForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="incomeAmount">Amount (₹) *</label>
+            <div class="amount-input-wrap">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="incomeAmount" class="form-control" placeholder="0.00" step="0.01" min="1" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="incomeTitle">Income Title / Source *</label>
+            <input type="text" id="incomeTitle" class="form-control" placeholder="e.g. Monthly Club Fee - Rahul K, Onam Sponsor" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="incomeCategory">Category *</label>
+              <select id="incomeCategory" class="filter-select form-control" required>
+                <option value="Membership Fees">Monthly Membership Fee</option>
+                <option value="Tournament Entry">Tournament Entry Fees</option>
+                <option value="Sponsorship">Sponsorship & Ad</option>
+                <option value="Donation">General Donation</option>
+                <option value="Fundraiser">Fundraiser Campaign</option>
+                <option value="Court/Ground Rent">Court / Ground Rent</option>
+                <option value="Miscellaneous">Other Income</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="incomeDate">Date *</label>
+              <input type="date" id="incomeDate" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="incomePaymentMode">Payment Method *</label>
+              <select id="incomePaymentMode" class="filter-select form-control" required>
+                <option value="UPI">UPI / GPay / PhonePe</option>
+                <option value="Cash">Cash In Hand</option>
+                <option value="Bank Transfer">Bank Transfer (NEFT/IMPS)</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="incomeCreatedBy">Received By</label>
+              <input type="text" id="incomeCreatedBy" class="form-control" placeholder="e.g. Treasurer / Secretary" value="Admin">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="incomeNotes">Notes / Payer Details / Reference No</label>
+            <textarea id="incomeNotes" class="form-control" rows="2" placeholder="UPI Ref ID, Member ID, Receipt details..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="addIncomeModal">Cancel</button>
+          <button type="submit" class="btn btn-income" id="submitIncomeBtn">
+            <i class="fa-solid fa-plus"></i>
+            <span>Save Income</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Add Expense Modal -->
+  <div class="modal-backdrop" id="addExpenseModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-header-icon expense">
+            <i class="fa-solid fa-arrow-trend-down"></i>
+          </div>
+          <h3>Record New Expense</h3>
+        </div>
+        <button class="modal-close-btn" data-close-modal="addExpenseModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="addExpenseForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="expenseAmount">Amount (₹) *</label>
+            <div class="amount-input-wrap">
+              <span class="currency-symbol">₹</span>
+              <input type="number" id="expenseAmount" class="form-control" placeholder="0.00" step="0.01" min="1" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="expenseTitle">Expense Description / Purpose *</label>
+            <input type="text" id="expenseTitle" class="form-control" placeholder="e.g. Footballs & Shuttlecocks, Ground Grass Cutting" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expenseCategory">Category *</label>
+              <select id="expenseCategory" class="filter-select form-control" required>
+                <option value="Room Rent">Room Rent</option>
+                <option value="Event">Event Expenses</option>
+                <option value="Culturals">Culturals & Arts</option>
+                <option value="Sports Equipment">Sports Equipment & Gear</option>
+                <option value="Ground Maintenance">Ground & Turf Maintenance</option>
+                <option value="Tournament Expense">Tournament & Matches</option>
+                <option value="Refreshments">Food & Refreshments</option>
+                <option value="Electricity & Water">Electricity & Utilities</option>
+                <option value="Prizes & Trophies">Prizes, Trophies & Medals</option>
+                <option value="Printing & Banners">Printing, Posters & Banners</option>
+                <option value="Medical & First Aid">First Aid & Medical</option>
+                <option value="Miscellaneous">Other Miscellaneous</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="expenseDate">Date *</label>
+              <input type="date" id="expenseDate" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expensePaymentMode">Paid Via *</label>
+              <select id="expensePaymentMode" class="filter-select form-control" required>
+                <option value="UPI">UPI / GPay / PhonePe</option>
+                <option value="Cash">Cash</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="expenseCreatedBy">Authorized By</label>
+              <input type="text" id="expenseCreatedBy" class="form-control" placeholder="Admin / Secretary" value="Admin">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="expenseNotes">Notes / Vendor / Voucher Ref</label>
+            <textarea id="expenseNotes" class="form-control" rows="2" placeholder="Store name, Bill number, remarks..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="addExpenseModal">Cancel</button>
+          <button type="submit" class="btn btn-expense" id="submitExpenseBtn">
+            <i class="fa-solid fa-minus"></i>
+            <span>Record Expense</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Google Sheets Settings & Integration Modal -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-header-icon settings">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <h3>Google Sheets Database Setup</h3>
+        </div>
+        <button class="modal-close-btn" data-close-modal="settingsModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="googleScriptUrlInput">Google Apps Script Web App URL</label>
+          <input type="url" id="googleScriptUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+          <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">
+            The deployment URL from your Google Sheet Apps Script web app.
+          </small>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <button type="button" class="btn btn-primary" id="saveAndTestUrlBtn" style="flex: 1;">
+            <i class="fa-solid fa-link"></i>
+            <span>Save & Test Connection</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="useDemoDataBtn" title="Switch back to built-in demo data">
+            <i class="fa-solid fa-flask"></i>
+            <span>Use Demo Data</span>
+          </button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-subtle); margin: 1.25rem 0;">
+
+        <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-primary);">
+          <i class="fa-solid fa-circle-question" style="color: var(--brand-primary); margin-right: 4px;"></i>
+          Quick 2-Minute Google Sheet Setup:
+        </h4>
+        <ol class="setup-steps-list">
+          <li>Create a new Google Sheet (or use your existing sheet) and name it <strong>Pulari Club Finances</strong>.</li>
+          <li>In the menu bar, click <strong>Extensions &gt; Apps Script</strong>.</li>
+          <li>Paste the Google Apps Script code below into the editor (replace all existing code):</li>
+        </ol>
+
+        <div class="code-box-wrapper">
+          <button class="copy-code-btn" id="copyScriptCodeBtn">
+            <i class="fa-regular fa-copy"></i> Copy Script
+          </button>
+          <pre id="appsScriptSnippet"><code>Loading script...</code></pre>
+        </div>
+
+        <ol class="setup-steps-list" start="4">
+          <li>Click <strong>Deploy &gt; New deployment</strong>.</li>
+          <li>Select type <strong>Web app</strong>. Set <em>Execute as:</em> <strong>Me</strong> and <em>Who has access:</em> <strong>Anyone</strong>.</li>
+          <li>Click <strong>Deploy</strong>, grant permissions, copy the <strong>Web App URL</strong> and paste it above!</li>
+        </ol>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal="settingsModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Transaction Detail Modal -->
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="modal-header-icon" id="detailModalIcon">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <h3 id="detailModalTitle">Transaction Details</h3>
+        </div>
+        <button class="modal-close-btn" data-close-modal="detailModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="detailModalBody">
+        <!-- Injected dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal="detailModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- App Core Script -->
+  <script src="app.js"></script>
+</body>
+</html>
