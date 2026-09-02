@@ -716,6 +716,7 @@ function populateCategoryFilter() {
     'Prizes & Trophies',
     'Printing & Banners',
     'Medical & First Aid',
+    'Other Income',
     'Miscellaneous'
   ]);
   
