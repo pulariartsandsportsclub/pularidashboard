@@ -307,8 +307,8 @@ function bindEvents() {
 
   // Theme & Settings
   Elements.themeToggleBtn.addEventListener('click', toggleTheme);
-  Elements.settingsModalOpenBtn.addEventListener('click', () => openModal('settingsModal'));
-  Elements.syncStatusBadge.addEventListener('click', () => openModal('settingsModal'));
+  if (Elements.settingsModalOpenBtn) Elements.settingsModalOpenBtn.addEventListener('click', () => openModal('settingsModal'));
+  if (Elements.syncStatusBadge) Elements.syncStatusBadge.addEventListener('click', () => openModal('settingsModal'));
   Elements.refreshBtn.addEventListener('click', () => syncData(true));
 
   // Action Buttons
@@ -442,7 +442,7 @@ function handleLoginSubmit(e) {
       const mainWrapper = document.getElementById('appMainWrapper');
       if (overlay) overlay.style.display = 'none';
       if (mainWrapper) mainWrapper.style.display = 'flex';
-      
+
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> <span>Sign In to Dashboard</span>';
@@ -535,9 +535,9 @@ async function syncData(showToasts = true) {
     });
 
     if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
-    
+
     const result = await response.json();
-    
+
     if (result && result.status === 'success' && Array.isArray(result.data)) {
       AppState.transactions = result.data.map(item => ({
         ...item,
@@ -555,7 +555,7 @@ async function syncData(showToasts = true) {
     console.warn('Google Sheets sync error, using cached data:', error);
     setSyncStatus('error', 'Sync Failed (Offline Cache)');
     if (showToasts) showToast('Could not fetch from Google Sheet. Using local cache.', 'error');
-    
+
     const localCached = localStorage.getItem('pulari_local_transactions');
     if (localCached) {
       AppState.transactions = JSON.parse(localCached);
@@ -719,7 +719,7 @@ function populateCategoryFilter() {
     'Other Income',
     'Miscellaneous'
   ]);
-  
+
   AppState.transactions.forEach(t => {
     if (t.Category) categories.add(t.Category.trim());
   });
@@ -865,7 +865,7 @@ function renderCharts() {
 
   const timeframeSelect = document.getElementById('chartTimeframeSelect');
   const monthsCount = timeframeSelect ? (parseInt(timeframeSelect.value, 10) || 6) : 6;
-  
+
   // Determine anchor date from latest transaction or current date
   let anchorDate = new Date();
   if (AppState.transactions && AppState.transactions.length > 0) {
@@ -887,7 +887,7 @@ function renderCharts() {
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const key = `${y}-${m}`;
     const label = `${monthNames[d.getMonth()]} '${String(y).slice(2)}`;
-    
+
     monthLabels.push({ key, label });
     monthMap[key] = { income: 0, expense: 0 };
   }
@@ -1144,7 +1144,7 @@ async function handleAddIncomeSubmit(e) {
     if (AppState.googleScriptUrl) {
       await sendToGoogleSheet(newTxn);
     }
-    
+
     // Save to state
     const normalizedItem = {
       ID: newTxn.id,
@@ -1213,7 +1213,7 @@ async function handleAddExpenseSubmit(e) {
     if (AppState.googleScriptUrl) {
       await sendToGoogleSheet(newTxn);
     }
-    
+
     // Save to state
     const normalizedItem = {
       ID: newTxn.id,
@@ -1436,7 +1436,7 @@ function handleCopyScriptCode() {
 // ==========================================
 // Transaction Details Modal
 // ==========================================
-window.viewTransactionDetails = function(id) {
+window.viewTransactionDetails = function (id) {
   const txn = AppState.transactions.find(t => t.ID === id);
   if (!txn) return;
 
@@ -1908,7 +1908,7 @@ async function exportToPDF() {
       1: { cellWidth: 50 },
       2: { cellWidth: 66, halign: 'right', fontStyle: 'bold' }
     },
-    didParseCell: function(data) {
+    didParseCell: function (data) {
       if (data.section === 'body') {
         if (data.row.index === 0 && data.column.index === 2) {
           data.cell.styles.textColor = [6, 95, 70];
@@ -1988,28 +1988,35 @@ async function exportToPDF() {
       doc.setFillColor(255, 255, 255);
       doc.roundedRect(140, signY + 7.5, 15, 15, 1.5, 1.5, 'F');
       doc.addImage(logoBase64, 'PNG', 140.5, signY + 8, 14, 14);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // Verified Badge with green tick
   const badgeX = logoBase64 ? 158 : 140;
+  const badgeWidth = logoBase64 ? 36 : 54;
   doc.setFillColor(16, 185, 129); // Emerald Green #10b981
-  doc.roundedRect(badgeX, signY + 7.5, 38, 6.5, 1.2, 1.2, 'F');
-  
+  doc.roundedRect(badgeX, signY + 7.5, badgeWidth, 6, 1.2, 1.2, 'F');
+
+  // Crisp white checkmark
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.55);
+  doc.line(badgeX + 6, signY + 10.5, badgeX + 7.3, signY + 12);
+  doc.line(badgeX + 7.3, signY + 12, badgeX + 9.8, signY + 9);
+
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.text('✓  VERIFIED', badgeX + 7.5, signY + 12);
+  doc.setFontSize(7);
+  doc.text('VERIFIED', badgeX + (badgeWidth / 2) + 2, signY + 11.8, { align: 'center' });
 
   doc.setTextColor(6, 95, 70);
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.setFont('helvetica', 'bold');
-  doc.text('Pulari Arts & Sports Club', badgeX, signY + 18.5);
+  doc.text('Pulari Arts & Sports Club', badgeX, signY + 18);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6);
   doc.setTextColor(100, 116, 139);
-  doc.text('Official Accounts Approved', badgeX, signY + 22.5);
+  doc.text('Official Accounts Approved', badgeX, signY + 22);
 
   // ==========================================
   // FOOTER & PAGE NUMBERING (ALL PAGES)
@@ -2057,7 +2064,7 @@ function closeModal(id) {
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  
+
   let icon = 'fa-circle-info';
   if (type === 'success') icon = 'fa-circle-check';
   if (type === 'error') icon = 'fa-circle-exclamation';
