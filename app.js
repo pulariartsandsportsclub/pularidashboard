@@ -1721,7 +1721,7 @@ async function exportToPDF() {
     hour: '2-digit',
     minute: '2-digit'
   });
-  doc.text(`Generated: ${reportDate}  •  Scope: Complete Financial Records (${filtered.length} total entries)`, textStartX, 29);
+  doc.text(`Generated: ${reportDate}`, textStartX, 29);
 
   let currentY = 46;
 
