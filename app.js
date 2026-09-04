@@ -308,7 +308,6 @@ function bindEvents() {
   // Theme & Settings
   Elements.themeToggleBtn.addEventListener('click', toggleTheme);
   if (Elements.settingsModalOpenBtn) Elements.settingsModalOpenBtn.addEventListener('click', () => openModal('settingsModal'));
-  if (Elements.syncStatusBadge) Elements.syncStatusBadge.addEventListener('click', () => openModal('settingsModal'));
   Elements.refreshBtn.addEventListener('click', () => syncData(true));
 
   // Action Buttons
@@ -545,7 +544,7 @@ async function syncData(showToasts = true) {
       }));
       AppState.isOnlineMode = true;
       localStorage.setItem('pulari_local_transactions', JSON.stringify(AppState.transactions));
-      setSyncStatus('online', 'Connected to Google Sheet');
+      setSyncStatus('online', 'Connected to Google DB');
       updateDashboard();
       if (showToasts) showToast('Data synchronized successfully from Google Sheets!', 'success');
     } else {

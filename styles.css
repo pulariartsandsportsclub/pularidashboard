@@ -185,6 +185,10 @@ button, input, select, textarea {
   line-height: 1.2;
 }
 
+.brand-title-short {
+  display: none;
+}
+
 .brand-subtitle {
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -210,12 +214,8 @@ button, input, select, textarea {
   font-size: 0.78rem;
   font-weight: 500;
   color: var(--text-secondary);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.sync-status-badge:hover {
-  border-color: var(--border-focus);
+  cursor: default;
+  user-select: none;
 }
 
 .status-dot {
@@ -1310,12 +1310,581 @@ button, input, select, textarea {
   color: var(--text-muted);
 }
 
-@media (max-width: 640px) {
-  .footer-content {
+/* ==========================================================================
+   Comprehensive Mobile & Responsive Design System
+   ========================================================================== */
+
+/* 1. Global Viewport & Base Fluid Rules */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+img, canvas, svg {
+  max-width: 100%;
+}
+
+/* Touch Device Optimization */
+@media (hover: none) and (pointer: coarse) {
+  .btn, .filter-select, .type-tab-btn, .chart-toggle-btn {
+    min-height: 42px;
+  }
+  .form-control, .login-input {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+  }
+}
+
+/* Tablet Breakpoint (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 1.25rem 1.5rem 2.5rem;
+  }
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+/* Mobile & Small Tablet Breakpoint (max-width: 768px) */
+@media (max-width: 768px) {
+  /* Layout Spacing */
+  .main-content {
+    padding: 0.85rem 0.75rem 2rem;
+    max-width: 100%;
+  }
+
+  /* Top Navbar */
+  .top-navbar {
+    padding: 0.75rem 0.85rem;
+    margin-bottom: 1.15rem;
+    border-radius: var(--radius-md);
+    gap: 0.5rem;
+  }
+
+  .brand-section {
+    gap: 0.65rem;
+    min-width: 0;
+  }
+
+  .brand-logo-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .brand-title {
+    font-size: 1rem;
+    line-height: 1.15;
+  }
+
+  .brand-title-full {
+    display: none !important;
+  }
+
+  .brand-title-short {
+    display: inline !important;
+  }
+
+  .brand-subtitle {
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+  }
+
+  .nav-actions {
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+
+  .sync-status-badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    gap: 0.3rem;
+  }
+
+  .btn-icon-only {
+    width: 36px;
+    height: 36px;
+    padding: 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  /* Action Banner & Buttons */
+  .action-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .section-greeting h2 {
+    font-size: 1.25rem;
+  }
+
+  .section-greeting p {
+    font-size: 0.8rem;
+  }
+
+  .action-buttons-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .action-buttons-group .btn {
+    width: 100%;
+    padding: 0.65rem 0.5rem;
+    font-size: 0.8rem;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    min-height: 42px;
+  }
+
+  .action-buttons-group .btn i {
+    font-size: 0.85rem;
+  }
+
+  /* Metrics Cards Grid */
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .metric-card {
+    padding: 0.9rem 0.85rem;
+    border-radius: var(--radius-md);
+  }
+
+  .metric-header {
+    margin-bottom: 0.4rem;
+  }
+
+  .metric-title {
+    font-size: 0.68rem;
+    letter-spacing: 0.02em;
+  }
+
+  .metric-icon-box {
+    width: 30px;
+    height: 30px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .metric-value {
+    font-size: 1.3rem;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+
+  .metric-footer {
+    font-size: 0.68rem;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .metric-badge {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.35rem;
+  }
+
+  /* Charts */
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .chart-card {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .chart-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
   }
+
+  .chart-title {
+    font-size: 0.95rem;
+  }
+
+  .chart-subtitle {
+    font-size: 0.72rem;
+  }
+
+  .chart-toggle-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+  }
+
+  .chart-toggle-btn {
+    justify-content: center;
+    font-size: 0.72rem;
+    padding: 0.4rem 0.25rem;
+  }
+
+  .chart-header .btn-group {
+    width: 100%;
+  }
+
+  .chart-header .filter-select {
+    width: 100%;
+  }
+
+  .chart-container {
+    height: 230px;
+    min-height: 230px;
+    max-height: 230px;
+    width: 100%;
+    position: relative;
+  }
+
+  /* Transaction Ledger */
+  .ledger-section {
+    padding: 1rem 0.85rem;
+    border-radius: var(--radius-md);
+  }
+
+  .ledger-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .ledger-title-group h3 {
+    font-size: 1.1rem;
+  }
+
+  .ledger-title-group p {
+    font-size: 0.75rem;
+  }
+
+  .type-tabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+  }
+
+  .type-tab-btn {
+    text-align: center;
+    padding: 0.45rem 0.2rem;
+    font-size: 0.74rem;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Filters Toolbar */
+  .filters-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.65rem;
+    border-radius: var(--radius-md);
+  }
+
+  .search-input-wrapper {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  #categoryFilter {
+    grid-column: 1 / 2;
+    width: 100%;
+    min-width: 0;
+    font-size: 0.78rem;
+    padding: 0.5rem 0.65rem;
+  }
+
+  #paymentModeFilter {
+    grid-column: 2 / 3;
+    width: 100%;
+    min-width: 0;
+    font-size: 0.78rem;
+    padding: 0.5rem 0.65rem;
+  }
+
+  #sortBySelect {
+    grid-column: 1 / 2;
+    width: 100%;
+    min-width: 0;
+    font-size: 0.78rem;
+    padding: 0.5rem 0.65rem;
+  }
+
+  #resetFiltersBtn {
+    grid-column: 2 / 3;
+    width: 100%;
+    height: auto;
+    min-height: 38px;
+    justify-content: center;
+  }
+
+  /* Responsive Table */
+  .table-responsive {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .transactions-table {
+    min-width: 560px;
+  }
+
+  .transactions-table th {
+    padding: 0.65rem 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  .transactions-table td {
+    padding: 0.75rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .txn-title-cell {
+    gap: 0.5rem;
+  }
+
+  .txn-type-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 0.72rem;
+    border-radius: 6px;
+  }
+
+  .txn-title-main {
+    font-size: 0.8rem;
+  }
+
+  .txn-id-sub {
+    font-size: 0.65rem;
+  }
+
+  .badge {
+    font-size: 0.68rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .amount-income, .amount-expense {
+    font-size: 0.85rem;
+  }
+
+  /* Modals on Mobile */
+  .modal-backdrop {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-width: 100% !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 90vh;
+    margin: 0;
+  }
+
+  .modal-header {
+    padding: 0.9rem 1.15rem;
+  }
+
+  .modal-title-wrap h3 {
+    font-size: 1.05rem;
+  }
+
+  .modal-header-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
+
+  .modal-body {
+    padding: 1.15rem;
+    max-height: calc(90vh - 130px);
+    overflow-y: auto;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .form-group {
+    margin-bottom: 0.9rem;
+  }
+
+  .form-group label {
+    font-size: 0.78rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 1.15rem;
+    gap: 0.5rem;
+  }
+
+  .modal-footer .btn {
+    flex: 1;
+    min-height: 42px;
+    justify-content: center;
+    font-size: 0.82rem;
+  }
+
+  /* Settings Modal Content Adjustments */
+  .setup-steps-list {
+    font-size: 0.78rem;
+    padding-left: 1rem;
+  }
+
+  .code-box-wrapper {
+    max-height: 130px;
+    padding: 0.65rem;
+  }
+
+  .code-box-wrapper pre {
+    font-size: 0.68rem;
+  }
+
+  /* Login Screen on Mobile */
+  .login-card {
+    padding: 1.75rem 1.25rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .login-logo-wrap {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 0.75rem;
+  }
+
+  .login-title {
+    font-size: 1.15rem;
+  }
+
+  .login-subtitle {
+    font-size: 0.72rem;
+  }
+
+  .login-btn {
+    min-height: 44px;
+    font-size: 0.9rem;
+  }
+
+  /* Footer on Mobile */
+  .app-footer {
+    padding: 1.25rem 1rem;
+    margin-top: 1.5rem;
+    border-radius: var(--radius-md);
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .footer-brand {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .footer-logo-wrap {
+    width: 36px;
+    height: 36px;
+  }
+
+  .footer-title {
+    font-size: 0.88rem;
+  }
+
+  .footer-desc {
+    font-size: 0.72rem;
+  }
+
   .footer-meta {
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  /* Toast Notifications */
+  .toast-container {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    align-items: center;
+  }
+
+  .toast {
+    max-width: 100%;
+    width: 100%;
+    font-size: 0.8rem;
+    padding: 0.7rem 0.95rem;
+  }
+}
+
+/* Extra Small Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .top-navbar {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .brand-title {
+    font-size: 0.92rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.62rem;
+  }
+
+  .sync-status-badge span#syncStatusText {
+    max-width: 95px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+  }
+
+  .metric-value {
+    font-size: 1.18rem;
+  }
+
+  .metric-card {
+    padding: 0.75rem 0.7rem;
+  }
+
+  .chart-toggle-btn {
+    font-size: 0.68rem;
+    padding: 0.35rem 0.15rem;
+    gap: 0.2rem;
+  }
+
+  .type-tab-btn {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.15rem;
+  }
+}
+
+/* Small Screen Edge Case (max-width: 360px) */
+@media (max-width: 360px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .action-buttons-group {
+    grid-template-columns: 1fr;
   }
 }
