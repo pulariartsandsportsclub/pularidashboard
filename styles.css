@@ -13,25 +13,25 @@
   --bg-glass: rgba(17, 24, 39, 0.75);
   --bg-glass-card: rgba(30, 41, 59, 0.6);
   --bg-glass-input: rgba(15, 23, 42, 0.6);
-  
+
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-focus: rgba(99, 102, 241, 0.5);
-  
+
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  
+
   /* Brand & Accents */
   --brand-primary: #6366f1;
   --brand-hover: #4f46e5;
   --brand-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  
+
   /* Financial Indicators */
   --income-color: #10b981;
   --income-bg: rgba(16, 185, 129, 0.12);
   --income-border: rgba(16, 185, 129, 0.3);
   --income-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  
+
   --expense-color: #f43f5e;
   --expense-bg: rgba(244, 63, 94, 0.12);
   --expense-border: rgba(244, 63, 94, 0.3);
@@ -39,10 +39,10 @@
 
   --balance-color: #38bdf8;
   --balance-bg: rgba(56, 189, 248, 0.12);
-  
+
   --warning-color: #f59e0b;
   --warning-bg: rgba(245, 158, 11, 0.12);
-  
+
   /* Shadow & Elevation */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
@@ -55,7 +55,7 @@
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-full: 9999px;
-  
+
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -67,14 +67,14 @@
   --bg-glass: rgba(255, 255, 255, 0.85);
   --bg-glass-card: rgba(255, 255, 255, 0.75);
   --bg-glass-input: rgba(241, 245, 249, 0.8);
-  
+
   --border-subtle: rgba(0, 0, 0, 0.08);
   --border-focus: rgba(99, 102, 241, 0.4);
-  
+
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
-  
+
   --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.09);
@@ -98,19 +98,27 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   overflow-x: hidden;
-  background-image: 
+  background-image:
     radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
     radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 40%);
   background-attachment: fixed;
 }
 
-h1, h2, h3, h4, .brand-title, .metric-value {
+h1,
+h2,
+h3,
+h4,
+.brand-title,
+.metric-value {
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font-family: inherit;
 }
 
@@ -183,10 +191,6 @@ button, input, select, textarea {
   font-size: 1.25rem;
   color: var(--text-primary);
   line-height: 1.2;
-}
-
-.brand-title-short {
-  display: none;
 }
 
 .brand-subtitle {
@@ -409,10 +413,21 @@ button, input, select, textarea {
   background: transparent;
 }
 
-.metric-card.card-income::before { background: var(--income-color); }
-.metric-card.card-expense::before { background: var(--expense-color); }
-.metric-card.card-balance::before { background: var(--brand-primary); }
-.metric-card.card-count::before { background: var(--warning-color); }
+.metric-card.card-income::before {
+  background: var(--income-color);
+}
+
+.metric-card.card-expense::before {
+  background: var(--expense-color);
+}
+
+.metric-card.card-balance::before {
+  background: var(--brand-primary);
+}
+
+.metric-card.card-count::before {
+  background: var(--warning-color);
+}
 
 .metric-header {
   display: flex;
@@ -439,10 +454,25 @@ button, input, select, textarea {
   font-size: 1.15rem;
 }
 
-.card-income .metric-icon-box { background: var(--income-bg); color: var(--income-color); }
-.card-expense .metric-icon-box { background: var(--expense-bg); color: var(--expense-color); }
-.card-balance .metric-icon-box { background: var(--balance-bg); color: var(--balance-color); }
-.card-count .metric-icon-box { background: var(--warning-bg); color: var(--warning-color); }
+.card-income .metric-icon-box {
+  background: var(--income-bg);
+  color: var(--income-color);
+}
+
+.card-expense .metric-icon-box {
+  background: var(--expense-bg);
+  color: var(--expense-color);
+}
+
+.card-balance .metric-icon-box {
+  background: var(--balance-bg);
+  color: var(--balance-color);
+}
+
+.card-count .metric-icon-box {
+  background: var(--warning-bg);
+  color: var(--warning-color);
+}
 
 .metric-value {
   font-size: 1.85rem;
@@ -450,8 +480,13 @@ button, input, select, textarea {
   margin-bottom: 0.35rem;
 }
 
-.metric-card.card-income .metric-value { color: var(--income-color); }
-.metric-card.card-expense .metric-value { color: var(--expense-color); }
+.metric-card.card-income .metric-value {
+  color: var(--income-color);
+}
+
+.metric-card.card-expense .metric-value {
+  color: var(--expense-color);
+}
 
 .metric-footer {
   display: flex;
@@ -908,9 +943,20 @@ button, input, select, textarea {
   justify-content: center;
 }
 
-.modal-header-icon.income { background: var(--income-bg); color: var(--income-color); }
-.modal-header-icon.expense { background: var(--expense-bg); color: var(--expense-color); }
-.modal-header-icon.settings { background: rgba(99, 102, 241, 0.15); color: var(--brand-primary); }
+.modal-header-icon.income {
+  background: var(--income-bg);
+  color: var(--income-color);
+}
+
+.modal-header-icon.expense {
+  background: var(--expense-bg);
+  color: var(--expense-color);
+}
+
+.modal-header-icon.settings {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--brand-primary);
+}
 
 .modal-close-btn {
   background: transparent;
@@ -1069,13 +1115,26 @@ button, input, select, textarea {
 }
 
 @keyframes slideIn {
-  to { transform: translateX(0); }
+  to {
+    transform: translateX(0);
+  }
 }
 
 @keyframes pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.15); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: scale(1.15);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ==========================================================================
@@ -1089,7 +1148,7 @@ button, input, select, textarea {
   width: 100vw;
   height: 100vh;
   background: var(--bg-primary);
-  background-image: 
+  background-image:
     radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.12) 0%, transparent 50%);
   display: flex;
@@ -1113,8 +1172,15 @@ button, input, select, textarea {
 }
 
 @keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .login-header {
@@ -1172,9 +1238,19 @@ button, input, select, textarea {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 .login-input {
@@ -1315,23 +1391,33 @@ button, input, select, textarea {
    ========================================================================== */
 
 /* 1. Global Viewport & Base Fluid Rules */
-html, body {
+html,
+body {
   overflow-x: hidden;
   width: 100%;
   -webkit-text-size-adjust: 100%;
 }
 
-img, canvas, svg {
+img,
+canvas,
+svg {
   max-width: 100%;
 }
 
 /* Touch Device Optimization */
 @media (hover: none) and (pointer: coarse) {
-  .btn, .filter-select, .type-tab-btn, .chart-toggle-btn {
+
+  .btn,
+  .filter-select,
+  .type-tab-btn,
+  .chart-toggle-btn {
     min-height: 42px;
   }
-  .form-control, .login-input {
-    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+
+  .form-control,
+  .login-input {
+    font-size: 16px !important;
+    /* Prevents auto-zoom on iOS */
   }
 }
 
@@ -1340,6 +1426,7 @@ img, canvas, svg {
   .main-content {
     padding: 1.25rem 1.5rem 2.5rem;
   }
+
   .charts-grid {
     grid-template-columns: 1fr;
     gap: 1.25rem;
@@ -1348,6 +1435,7 @@ img, canvas, svg {
 
 /* Mobile & Small Tablet Breakpoint (max-width: 768px) */
 @media (max-width: 768px) {
+
   /* Layout Spacing */
   .main-content {
     padding: 0.85rem 0.75rem 2rem;
@@ -1377,14 +1465,6 @@ img, canvas, svg {
   .brand-title {
     font-size: 1rem;
     line-height: 1.15;
-  }
-
-  .brand-title-full {
-    display: none !important;
-  }
-
-  .brand-title-short {
-    display: inline !important;
   }
 
   .brand-subtitle {
@@ -1676,7 +1756,8 @@ img, canvas, svg {
     padding: 0.15rem 0.4rem;
   }
 
-  .amount-income, .amount-expense {
+  .amount-income,
+  .amount-expense {
     font-size: 0.85rem;
   }
 
@@ -1884,6 +1965,7 @@ img, canvas, svg {
   .metrics-grid {
     grid-template-columns: 1fr;
   }
+
   .action-buttons-group {
     grid-template-columns: 1fr;
   }

@@ -1,29 +1,34 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pulari Club - Income & Expense Admin Portal</title>
-  <meta name="description" content="Financial management and tracking dashboard for Pulari Arts & Sports Club with Google Sheets real-time integration.">
-  
+  <meta name="description"
+    content="Financial management and tracking dashboard for Pulari Arts & Sports Club with Google Sheets real-time integration.">
+
   <!-- Google Fonts & Font Awesome Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="PULARI.png">
-  
+
   <!-- Master Stylesheet -->
   <link rel="stylesheet" href="styles.css">
-  
+
   <!-- Chart.js UMD, SheetJS & jsPDF CDNs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
+
 <body>
   <!-- ================= LOGIN SCREEN OVERLAY ================= -->
   <div class="login-overlay" id="loginOverlay">
@@ -32,10 +37,7 @@
         <div class="login-logo-wrap">
           <img src="PULARI.png" alt="Pulari Club Logo" class="login-logo-img">
         </div>
-        <h2 class="login-title">
-          <span class="brand-title-full">PULARI ARTS & SPORTS CLUB</span>
-          <span class="brand-title-short">PASC</span>
-        </h2>
+        <h2 class="login-title">PULARI ARTS & SPORTS CLUB</h2>
         <p class="login-subtitle">Admin Financial Portal</p>
       </div>
 
@@ -46,14 +48,18 @@
         </div>
 
         <div class="form-group">
-          <label for="loginUsername"><i class="fa-solid fa-user-shield" style="margin-right: 6px; color: var(--brand-primary);"></i> User ID</label>
-          <input type="text" id="loginUsername" class="form-control login-input" placeholder="Enter User ID (admin)" required autocomplete="username">
+          <label for="loginUsername"><i class="fa-solid fa-user-shield"
+              style="margin-right: 6px; color: var(--brand-primary);"></i> User ID</label>
+          <input type="text" id="loginUsername" class="form-control login-input" placeholder="Enter User ID (admin)"
+            required autocomplete="username">
         </div>
 
         <div class="form-group">
-          <label for="loginPassword"><i class="fa-solid fa-lock" style="margin-right: 6px; color: var(--brand-primary);"></i> Password</label>
+          <label for="loginPassword"><i class="fa-solid fa-lock"
+              style="margin-right: 6px; color: var(--brand-primary);"></i> Password</label>
           <div class="password-input-wrap">
-            <input type="password" id="loginPassword" class="form-control login-input" placeholder="Enter Password" required autocomplete="current-password">
+            <input type="password" id="loginPassword" class="form-control login-input" placeholder="Enter Password"
+              required autocomplete="current-password">
             <button type="button" class="btn-toggle-password" id="togglePasswordBtn" title="Show/Hide Password">
               <i class="fa-solid fa-eye" id="passwordEyeIcon"></i>
             </button>
@@ -74,7 +80,7 @@
 
   <div class="app-wrapper" id="appMainWrapper" style="display: none;">
     <main class="main-content">
-      
+
       <!-- Top Navigation Bar -->
       <header class="top-navbar">
         <div class="brand-section">
@@ -82,14 +88,11 @@
             <img src="PULARI.png" alt="Pulari Arts & Sports Club Logo" class="brand-logo-img">
           </div>
           <div>
-            <h1 class="brand-title">
-              <span class="brand-title-full">PULARI ARTS & SPORTS CLUB</span>
-              <span class="brand-title-short">PASC</span>
-            </h1>
+            <h1 class="brand-title">PULARI ARTS & SPORTS CLUB</h1>
             <div class="brand-subtitle">Financial Admin Dashboard</div>
           </div>
         </div>
-        
+
         <div class="nav-actions">
           <div class="sync-status-badge" id="syncStatusBadge" title="Google Sheets Connection Status">
             <span class="status-dot" id="syncStatusDot"></span>
@@ -122,17 +125,18 @@
             <i class="fa-solid fa-circle-plus"></i>
             <span>Add Income</span>
           </button>
-          
+
           <button class="btn btn-expense" id="openAddExpenseBtn">
             <i class="fa-solid fa-circle-minus"></i>
             <span>Add Expense</span>
           </button>
-          
-          <button class="btn btn-secondary" id="exportExcelBtn" title="Download Excel (.xlsx) spreadsheet with Income & Expenses tabs">
+
+          <button class="btn btn-secondary" id="exportExcelBtn"
+            title="Download Excel (.xlsx) spreadsheet with Income & Expenses tabs">
             <i class="fa-solid fa-file-excel" style="color: #10b981;"></i>
             <span>Export Excel</span>
           </button>
-          
+
           <button class="btn btn-secondary" id="exportPdfBtn" title="Generate and download formatted PDF statement">
             <i class="fa-solid fa-file-pdf" style="color: #f43f5e;"></i>
             <span>Export PDF</span>
@@ -152,7 +156,8 @@
           </div>
           <div class="metric-value" id="statTotalIncome">₹0.00</div>
           <div class="metric-footer">
-            <span class="metric-badge positive" id="incomeBadge"><i class="fa-solid fa-arrow-up"></i> Total Inflow</span>
+            <span class="metric-badge positive" id="incomeBadge"><i class="fa-solid fa-arrow-up"></i> Total
+              Inflow</span>
             <span id="incomeCountLabel">0 Entries</span>
           </div>
         </div>
@@ -167,7 +172,8 @@
           </div>
           <div class="metric-value" id="statTotalExpense">₹0.00</div>
           <div class="metric-footer">
-            <span class="metric-badge negative" id="expenseBadge"><i class="fa-solid fa-arrow-down"></i> Total Outflow</span>
+            <span class="metric-badge negative" id="expenseBadge"><i class="fa-solid fa-arrow-down"></i> Total
+              Outflow</span>
             <span id="expenseCountLabel">0 Entries</span>
           </div>
         </div>
@@ -256,7 +262,7 @@
             <h3>Transaction Ledger</h3>
             <p>Detailed list of all receipts, donations, tournament fees, and club expenditures</p>
           </div>
-          
+
           <div class="type-tabs">
             <button class="type-tab-btn active" data-filter-type="all">All (<span id="countAll">0</span>)</button>
             <button class="type-tab-btn" data-filter-type="income">Income (<span id="countIncome">0</span>)</button>
@@ -290,7 +296,7 @@
             <option value="amount-desc">Amount (Highest First)</option>
             <option value="amount-asc">Amount (Lowest First)</option>
           </select>
-          
+
           <button class="btn btn-secondary" id="resetFiltersBtn" title="Reset all filters">
             <i class="fa-solid fa-filter-circle-xmark"></i>
           </button>
@@ -314,7 +320,7 @@
               <!-- Dynamically populated via JS -->
             </tbody>
           </table>
-          
+
           <div id="tableEmptyState" class="empty-state" style="display: none;">
             <i class="fa-solid fa-receipt"></i>
             <p>No transactions found matching the selected filters.</p>
@@ -330,10 +336,7 @@
               <img src="PULARI.png" alt="Pulari Club Logo" class="footer-logo-img">
             </div>
             <div>
-              <h4 class="footer-title">
-                <span class="brand-title-full">PULARI ARTS & SPORTS CLUB</span>
-                <span class="brand-title-short">PASC</span>
-              </h4>
+              <h4 class="footer-title">PULARI ARTS & SPORTS CLUB</h4>
               <p class="footer-desc">ESTD 1985 • Empowering Community, Sports & Arts</p>
             </div>
           </div>
@@ -373,13 +376,15 @@
             <label for="incomeAmount">Amount (₹) *</label>
             <div class="amount-input-wrap">
               <span class="currency-symbol">₹</span>
-              <input type="number" id="incomeAmount" class="form-control" placeholder="0.00" step="0.01" min="1" required>
+              <input type="number" id="incomeAmount" class="form-control" placeholder="0.00" step="0.01" min="1"
+                required>
             </div>
           </div>
 
           <div class="form-group">
             <label for="incomeTitle">Income Title / Source *</label>
-            <input type="text" id="incomeTitle" class="form-control" placeholder="e.g. Monthly Club Fee - Rahul K, Onam Sponsor" required>
+            <input type="text" id="incomeTitle" class="form-control"
+              placeholder="e.g. Monthly Club Fee - Rahul K, Onam Sponsor" required>
           </div>
 
           <div class="form-row">
@@ -415,13 +420,15 @@
 
             <div class="form-group">
               <label for="incomeCreatedBy">Received By</label>
-              <input type="text" id="incomeCreatedBy" class="form-control" placeholder="e.g. Treasurer / Secretary" value="Admin">
+              <input type="text" id="incomeCreatedBy" class="form-control" placeholder="e.g. Treasurer / Secretary"
+                value="Admin">
             </div>
           </div>
 
           <div class="form-group">
             <label for="incomeNotes">Notes / Payer Details / Reference No</label>
-            <textarea id="incomeNotes" class="form-control" rows="2" placeholder="UPI Ref ID, Member ID, Receipt details..."></textarea>
+            <textarea id="incomeNotes" class="form-control" rows="2"
+              placeholder="UPI Ref ID, Member ID, Receipt details..."></textarea>
           </div>
         </div>
 
@@ -454,13 +461,15 @@
             <label for="expenseAmount">Amount (₹) *</label>
             <div class="amount-input-wrap">
               <span class="currency-symbol">₹</span>
-              <input type="number" id="expenseAmount" class="form-control" placeholder="0.00" step="0.01" min="1" required>
+              <input type="number" id="expenseAmount" class="form-control" placeholder="0.00" step="0.01" min="1"
+                required>
             </div>
           </div>
 
           <div class="form-group">
             <label for="expenseTitle">Expense Description / Purpose *</label>
-            <input type="text" id="expenseTitle" class="form-control" placeholder="e.g. Footballs & Shuttlecocks, Ground Grass Cutting" required>
+            <input type="text" id="expenseTitle" class="form-control"
+              placeholder="e.g. Footballs & Shuttlecocks, Ground Grass Cutting" required>
           </div>
 
           <div class="form-row">
@@ -501,13 +510,15 @@
 
             <div class="form-group">
               <label for="expenseCreatedBy">Authorized By</label>
-              <input type="text" id="expenseCreatedBy" class="form-control" placeholder="Admin / Secretary" value="Admin">
+              <input type="text" id="expenseCreatedBy" class="form-control" placeholder="Admin / Secretary"
+                value="Admin">
             </div>
           </div>
 
           <div class="form-group">
             <label for="expenseNotes">Notes / Vendor / Voucher Ref</label>
-            <textarea id="expenseNotes" class="form-control" rows="2" placeholder="Store name, Bill number, remarks..."></textarea>
+            <textarea id="expenseNotes" class="form-control" rows="2"
+              placeholder="Store name, Bill number, remarks..."></textarea>
           </div>
         </div>
 
@@ -537,7 +548,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="googleScriptUrlInput">Google Apps Script Web App URL</label>
-          <input type="url" id="googleScriptUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+          <input type="url" id="googleScriptUrlInput" class="form-control"
+            placeholder="https://script.google.com/macros/s/.../exec">
           <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">
             The deployment URL from your Google Sheet Apps Script web app.
           </small>
@@ -561,7 +573,8 @@
           Quick 2-Minute Google Sheet Setup:
         </h4>
         <ol class="setup-steps-list">
-          <li>Create a new Google Sheet (or use your existing sheet) and name it <strong>Pulari Club Finances</strong>.</li>
+          <li>Create a new Google Sheet (or use your existing sheet) and name it <strong>Pulari Club Finances</strong>.
+          </li>
           <li>In the menu bar, click <strong>Extensions &gt; Apps Script</strong>.</li>
           <li>Paste the Google Apps Script code below into the editor (replace all existing code):</li>
         </ol>
@@ -575,8 +588,10 @@
 
         <ol class="setup-steps-list" start="4">
           <li>Click <strong>Deploy &gt; New deployment</strong>.</li>
-          <li>Select type <strong>Web app</strong>. Set <em>Execute as:</em> <strong>Me</strong> and <em>Who has access:</em> <strong>Anyone</strong>.</li>
-          <li>Click <strong>Deploy</strong>, grant permissions, copy the <strong>Web App URL</strong> and paste it above!</li>
+          <li>Select type <strong>Web app</strong>. Set <em>Execute as:</em> <strong>Me</strong> and <em>Who has
+              access:</em> <strong>Anyone</strong>.</li>
+          <li>Click <strong>Deploy</strong>, grant permissions, copy the <strong>Web App URL</strong> and paste it
+            above!</li>
         </ol>
       </div>
 
@@ -613,4 +628,5 @@
   <!-- App Core Script -->
   <script src="app.js"></script>
 </body>
+
 </html>
