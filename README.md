@@ -14,9 +14,13 @@ A financial management web application built for **Pulari Arts & Sports Club** w
   - **+ Add Income Modal**: Record monthly membership fees, donations, tournament fees, and sponsorships with payment modes (UPI, Cash, Bank Transfer, Cheque).
   - **- Add Expense Modal**: Record maintenance, equipment, food/refreshments, prizes, and utility bills.
 - 📋 **Filterable & Searchable Ledger**: Instant search by payer, title, or reference ID; filter by type or category, and sort by date or amount.
-- 📄 **Data Export**: 1-click **Export to CSV** and print-ready reports.
+- 📄 **PDF Invoice Attachment & Google Drive Storage**:
+  - Attach PDF invoices, bills, or receipt photos when adding any Income or Expense.
+  - Automatically uploads files to a dedicated folder (**"Pulari Club Invoices"**) inside your Google Drive.
+  - Generates direct view links saved in your Google Sheet and displays clickable **📄 View Invoice** buttons directly in the dashboard ledger.
+- 📄 **Data Export**: 1-click **Export to Excel (.xlsx)** and **Formatted PDF Statement**.
 - 🌙 **Modern Glassmorphism Design**: Rich dark/light mode toggle, responsive layout for desktop, tablet, and mobile.
-- ☁️ **Google Sheets Database Backend**: Complete two-way sync powered by Google Apps Script without needing external paid servers.
+- ☁️ **Google Sheets & Drive Database Backend**: Complete two-way sync powered by Google Apps Script without needing external paid servers.
 
 ---
 

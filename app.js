@@ -140,7 +140,7 @@ const AUTH_CREDENTIALS = {
 // ==========================================
 // Application State
 // ==========================================
-const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw881n-n9u3lV1XVUfH1OR6lDPOFn6dPQpT1icST0W491ekzGndiayCrHUOTWgUARIF/exec';
+const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx3fQPLuHUERree9oy2yVEzEpHkclqRnkBEgDo0Kbj8-SsrLcZfjBHtAv1JdfcsBA6m/exec';
 
 const AppState = {
   transactions: [],
@@ -834,7 +834,12 @@ function renderTransactionsTable() {
         <td style="text-align: right;">
           <span class="${amountClass}">${amountSign}${formatCurrency(t.Amount)}</span>
         </td>
-        <td style="text-align: center;">
+        <td style="text-align: center; white-space: nowrap;">
+          ${t.InvoiceUrl ? `
+            <a href="${escapeHtml(t.InvoiceUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon-only" style="width: 32px; height: 32px; color: #ef4444; margin-right: 4px;" title="View Invoice PDF in Google Drive">
+              <i class="fa-solid fa-file-pdf" style="font-size: 0.85rem;"></i>
+            </a>
+          ` : ''}
           <button class="btn btn-secondary btn-icon-only" style="width: 32px; height: 32px;" onclick="viewTransactionDetails('${t.ID}')" title="View Details">
             <i class="fa-solid fa-eye" style="font-size: 0.8rem;"></i>
           </button>
@@ -1104,6 +1109,19 @@ function renderCharts() {
   }
 }
 
+// Helper: Convert File object to Base64 string
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Data = reader.result.split(',')[1];
+      resolve(base64Data);
+    };
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
 // ==========================================
 // Form Submission Handlers
 // ==========================================
@@ -1117,10 +1135,22 @@ async function handleAddIncomeSubmit(e) {
   const paymentMode = document.getElementById('incomePaymentMode').value;
   const createdBy = document.getElementById('incomeCreatedBy').value.trim() || 'Admin';
   const notes = document.getElementById('incomeNotes').value.trim();
+  const fileInput = document.getElementById('incomeInvoiceFile');
 
   if (!amount || amount <= 0 || !title) {
     showToast('Please enter a valid amount and income title.', 'error');
     return;
+  }
+
+  let fileData = null;
+  let fileName = null;
+  let fileMimeType = null;
+
+  if (fileInput && fileInput.files && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    fileName = file.name;
+    fileMimeType = file.type || 'application/pdf';
+    fileData = await fileToBase64(file);
   }
 
   const newTxn = {
@@ -1133,16 +1163,23 @@ async function handleAddIncomeSubmit(e) {
     paymentMode: paymentMode,
     createdBy: createdBy,
     notes: notes,
-    timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19)
+    timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    fileData: fileData,
+    fileName: fileName,
+    fileMimeType: fileMimeType
   };
 
   Elements.submitIncomeBtn.disabled = true;
-  Elements.submitIncomeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+  Elements.submitIncomeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving & Uploading...';
 
   try {
+    let res = null;
     if (AppState.googleScriptUrl) {
-      await sendToGoogleSheet(newTxn);
+      res = await sendToGoogleSheet(newTxn);
     }
+
+    const invoiceUrl = (res && res.data && res.data.InvoiceUrl) ? res.data.InvoiceUrl : '';
+    const invoiceUploadError = (res && res.data && res.data.InvoiceUploadError) ? res.data.InvoiceUploadError : '';
 
     // Save to state
     const normalizedItem = {
@@ -1155,6 +1192,7 @@ async function handleAddIncomeSubmit(e) {
       PaymentMode: newTxn.paymentMode,
       CreatedBy: newTxn.createdBy,
       Notes: newTxn.notes,
+      InvoiceUrl: invoiceUrl,
       Timestamp: newTxn.timestamp
     };
 
@@ -1165,7 +1203,9 @@ async function handleAddIncomeSubmit(e) {
     closeModal('addIncomeModal');
     Elements.addIncomeForm.reset();
     initDates();
-    showToast(`Income of ₹${amount.toLocaleString('en-IN')} added successfully!`, 'success');
+    showToast(invoiceUploadError
+      ? `Income saved, but the invoice was not uploaded. ${invoiceUploadError}`
+      : `Income of ₹${amount.toLocaleString('en-IN')} added successfully!`, invoiceUploadError ? 'error' : 'success');
 
   } catch (error) {
     console.error(error);
@@ -1186,10 +1226,22 @@ async function handleAddExpenseSubmit(e) {
   const paymentMode = document.getElementById('expensePaymentMode').value;
   const createdBy = document.getElementById('expenseCreatedBy').value.trim() || 'Admin';
   const notes = document.getElementById('expenseNotes').value.trim();
+  const fileInput = document.getElementById('expenseInvoiceFile');
 
   if (!amount || amount <= 0 || !title) {
     showToast('Please enter a valid amount and description.', 'error');
     return;
+  }
+
+  let fileData = null;
+  let fileName = null;
+  let fileMimeType = null;
+
+  if (fileInput && fileInput.files && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    fileName = file.name;
+    fileMimeType = file.type || 'application/pdf';
+    fileData = await fileToBase64(file);
   }
 
   const newTxn = {
@@ -1202,16 +1254,23 @@ async function handleAddExpenseSubmit(e) {
     paymentMode: paymentMode,
     createdBy: createdBy,
     notes: notes,
-    timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19)
+    timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+    fileData: fileData,
+    fileName: fileName,
+    fileMimeType: fileMimeType
   };
 
   Elements.submitExpenseBtn.disabled = true;
-  Elements.submitExpenseBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Recording...';
+  Elements.submitExpenseBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Recording & Uploading...';
 
   try {
+    let res = null;
     if (AppState.googleScriptUrl) {
-      await sendToGoogleSheet(newTxn);
+      res = await sendToGoogleSheet(newTxn);
     }
+
+    const invoiceUrl = (res && res.data && res.data.InvoiceUrl) ? res.data.InvoiceUrl : '';
+    const invoiceUploadError = (res && res.data && res.data.InvoiceUploadError) ? res.data.InvoiceUploadError : '';
 
     // Save to state
     const normalizedItem = {
@@ -1224,6 +1283,7 @@ async function handleAddExpenseSubmit(e) {
       PaymentMode: newTxn.paymentMode,
       CreatedBy: newTxn.createdBy,
       Notes: newTxn.notes,
+      InvoiceUrl: invoiceUrl,
       Timestamp: newTxn.timestamp
     };
 
@@ -1234,7 +1294,9 @@ async function handleAddExpenseSubmit(e) {
     closeModal('addExpenseModal');
     Elements.addExpenseForm.reset();
     initDates();
-    showToast(`Expense of ₹${amount.toLocaleString('en-IN')} recorded successfully.`, 'success');
+    showToast(invoiceUploadError
+      ? `Expense saved, but the invoice was not uploaded. ${invoiceUploadError}`
+      : `Expense of ₹${amount.toLocaleString('en-IN')} recorded successfully.`, invoiceUploadError ? 'error' : 'success');
 
   } catch (error) {
     console.error(error);
@@ -1314,10 +1376,28 @@ function initAppsScriptSnippet() {
   const snippet = `const TRANSACTIONS_SHEET_NAME = "Transactions";
 const INCOME_SHEET_NAME = "Income";
 const EXPENSE_SHEET_NAME = "Expenses";
+const INVOICE_FOLDER_ID = "1PuBuDfmdQDxdytIS-_Es9JeZ1CSWGeBx";
 
-const TRANSACTIONS_HEADERS = ["ID", "Type", "Title", "Category", "Amount", "Date", "PaymentMode", "Notes", "CreatedBy", "Timestamp"];
-const INCOME_HEADERS = ["ID", "Title", "Category", "Amount", "Date", "PaymentMode", "Notes", "ReceivedBy", "Timestamp"];
-const EXPENSE_HEADERS = ["ID", "Title", "Category", "Amount", "Date", "PaymentMode", "Notes", "AuthorizedBy", "Timestamp"];
+const TRANSACTIONS_HEADERS = ["ID", "Type", "Title", "Category", "Amount", "Date", "PaymentMode", "Notes", "CreatedBy", "InvoiceUrl", "Timestamp"];
+const INCOME_HEADERS = ["ID", "Title", "Category", "Amount", "Date", "PaymentMode", "Notes", "ReceivedBy", "InvoiceUrl", "Timestamp"];
+const EXPENSE_HEADERS = ["ID", "Title", "Category", "Amount", "Date", "PaymentMode", "Notes", "AuthorizedBy", "InvoiceUrl", "Timestamp"];
+
+function getInvoiceFolder() {
+  if (INVOICE_FOLDER_ID && INVOICE_FOLDER_ID.trim() !== "") {
+    try { return DriveApp.getFolderById(INVOICE_FOLDER_ID.trim()); }
+    catch (err) { Logger.log("Folder by ID access warning: " + err.toString()); }
+  }
+  const folderName = "Pulari Club Invoices";
+  const folders = DriveApp.getFoldersByName(folderName);
+  return folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+}
+
+function authorizeDrive() {
+  const folder = getInvoiceFolder();
+  const tempFile = folder.createFile("auth_test.txt", "Drive Authorization Test");
+  tempFile.setTrashed(true);
+  return "Google Drive Write Permission Granted Successfully! Folder ID: " + folder.getId();
+}
 
 function getSheet(sheetType) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -1325,7 +1405,6 @@ function getSheet(sheetType) {
   let name = TRANSACTIONS_SHEET_NAME;
   let headers = TRANSACTIONS_HEADERS;
   let headerBg = "#1e293b";
-
   if (lower === "income") {
     name = INCOME_SHEET_NAME;
     headers = INCOME_HEADERS;
@@ -1335,16 +1414,25 @@ function getSheet(sheetType) {
     headers = EXPENSE_HEADERS;
     headerBg = "#991b1b";
   }
-
   let sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
     sheet.appendRow(headers);
-    const headerRange = sheet.getRange(1, 1, 1, headers.length);
-    headerRange.setFontWeight("bold").setBackground(headerBg).setFontColor("#ffffff");
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground(headerBg).setFontColor("#ffffff");
     sheet.setFrozenRows(1);
+  } else {
+    const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn() || 1).getValues()[0];
+    if (currentHeaders.indexOf("InvoiceUrl") === -1) sheet.getRange(1, currentHeaders.length + 1).setValue("InvoiceUrl").setFontWeight("bold");
   }
   return sheet;
+}
+
+function appendRecord(sheet, values) {
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  sheet.appendRow(headers.map(header => {
+    if (header === "ReceivedBy" || header === "AuthorizedBy") return values.CreatedBy || "";
+    return Object.prototype.hasOwnProperty.call(values, header) ? values[header] : "";
+  }));
 }
 
 function readSheetRows(sheet, defaultType) {
@@ -1354,66 +1442,71 @@ function readSheetRows(sheet, defaultType) {
   const headers = data[0];
   return data.slice(1).map(row => {
     const item = { Type: defaultType || "income" };
-    headers.forEach((h, i) => {
-      let val = row[i];
-      if (val instanceof Date) val = Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd");
-      item[h] = val;
+    headers.forEach((header, index) => {
+      let value = row[index];
+      if (value instanceof Date) value = Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
+      item[header] = value;
     });
     if (item.ReceivedBy && !item.CreatedBy) item.CreatedBy = item.ReceivedBy;
     if (item.AuthorizedBy && !item.CreatedBy) item.CreatedBy = item.AuthorizedBy;
     return item;
-  }).filter(i => i.ID || i.Title);
+  }).filter(item => item.ID || item.Title);
 }
 
-function doGet(e) {
+function doGet() {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const txnSheet = ss.getSheetByName(TRANSACTIONS_SHEET_NAME);
-    let all = [];
-    if (txnSheet && txnSheet.getLastRow() > 1) {
-      all = readSheetRows(txnSheet, "income");
-    } else {
-      all = [...readSheetRows(getSheet("income"), "income"), ...readSheetRows(getSheet("expense"), "expense")];
-    }
-    let inc = 0, exp = 0;
-    all.forEach(i => {
-      const a = parseFloat(i.Amount) || 0;
-      if (i.Type && i.Type.toLowerCase() === "income") inc += a; else exp += a;
+    const transactionSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TRANSACTIONS_SHEET_NAME);
+    const allTransactions = transactionSheet && transactionSheet.getLastRow() > 1
+      ? readSheetRows(transactionSheet, "income")
+      : [...readSheetRows(getSheet("income"), "income"), ...readSheetRows(getSheet("expense"), "expense")];
+    let totalIncome = 0;
+    let totalExpense = 0;
+    allTransactions.forEach(item => {
+      const amount = parseFloat(item.Amount) || 0;
+      if ((item.Type || "").toLowerCase() === "income") totalIncome += amount;
+      else if ((item.Type || "").toLowerCase() === "expense") totalExpense += amount;
     });
-    all.sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "success", data: all, summary: { totalIncome: inc, totalExpense: exp, netBalance: inc - exp, count: all.length }
-    })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+    allTransactions.sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
+    return createJsonResponse({ status: "success", data: allTransactions, summary: { totalIncome, totalExpense, netBalance: totalIncome - totalExpense, count: allTransactions.length } });
+  } catch (error) {
+    return createJsonResponse({ status: "error", message: error.toString() });
   }
 }
 
 function doPost(e) {
   try {
-    const payload = (e && e.postData && e.postData.contents) ? JSON.parse(e.postData.contents) : (e.parameter || {});
+    const payload = (e && e.postData && e.postData.contents) ? JSON.parse(e.postData.contents) : ((e && e.parameter) || {});
     const type = (payload.type || "income").toLowerCase();
-    const isInc = type === "income";
-    const prefix = isInc ? "INC-" : "EXP-";
-    const id = payload.id || prefix + Utilities.formatDate(new Date(), "GMT+05:30", "yyyyMMdd-HHmmss") + "-" + Math.floor(Math.random() * 1000);
-    const title = payload.title || "Untitled";
-    const category = payload.category || "General";
-    const amount = parseFloat(payload.amount) || 0;
-    const date = payload.date || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
-    const mode = payload.paymentMode || "Cash";
-    const notes = payload.notes || "";
-    const person = payload.createdBy || (isInc ? "Treasurer" : "Secretary");
-    const ts = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
-
-    // 1. Append to Master Transactions sheet
-    getSheet("transactions").appendRow([id, type, title, category, amount, date, mode, notes, person, ts]);
-
-    // 2. Append to specific Income or Expense sheet
-    getSheet(type).appendRow([id, title, category, amount, date, mode, notes, person, ts]);
-
-    return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Saved to both sheets" })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+    const isIncome = type === "income";
+    const id = payload.id || (isIncome ? "INC-" : "EXP-") + Utilities.formatDate(new Date(), "GMT+05:30", "yyyyMMdd-HHmmss") + "-" + Math.floor(Math.random() * 1000);
+    const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+    const record = {
+      ID: id, Type: type, Title: payload.title || "Untitled", Category: payload.category || "General",
+      Amount: parseFloat(payload.amount) || 0, Date: payload.date || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd"),
+      PaymentMode: payload.paymentMode || "Cash", Notes: payload.notes || "",
+      CreatedBy: payload.createdBy || (isIncome ? "Treasurer" : "Secretary"), InvoiceUrl: payload.invoiceUrl || "", Timestamp: timestamp
+    };
+    let invoiceUploadError = "";
+    if (payload.fileData && payload.fileName) {
+      try {
+        const fileName = (id + "_" + payload.fileName).replace(/[^a-zA-Z0-9_.-]/g, "_");
+        const blob = Utilities.newBlob(Utilities.base64Decode(payload.fileData), payload.fileMimeType || "application/pdf", fileName);
+        const folder = getInvoiceFolder();
+        const file = folder.createFile(blob);
+        record.InvoiceUrl = file.getUrl();
+        try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }
+        catch (sharingError) { Logger.log("Drive sharing warning: " + sharingError.toString()); }
+      } catch (driveError) {
+        Logger.log("Drive upload error: " + driveError.toString());
+        invoiceUploadError = "Invoice upload failed: " + driveError.toString();
+      }
+    }
+    appendRecord(getSheet("transactions"), record);
+    appendRecord(getSheet(type), record);
+    return createJsonResponse({ status: "success", message: "Saved to both sheets & Drive", data: Object.assign({}, record, { InvoiceUploadError: invoiceUploadError }) });
+  } catch (error) {
+    return createJsonResponse({ status: "error", message: error.toString() });
+  }
 }`;
 
   Elements.appsScriptSnippet.textContent = snippet;
@@ -1491,12 +1584,25 @@ window.viewTransactionDetails = function (id) {
         </div>
       </div>
 
-      <div>
+      <div style="margin-bottom: 0.85rem;">
         <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Notes & Reference</label>
         <div style="font-size: 0.88rem; color: var(--text-secondary); background: var(--bg-glass-input); padding: 0.65rem; border-radius: var(--radius-sm); margin-top: 0.25rem;">
           ${escapeHtml(txn.Notes || 'No notes provided.')}
         </div>
       </div>
+
+      ${txn.InvoiceUrl ? `
+        <div>
+          <label style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Invoice Attachment</label>
+          <div style="margin-top: 0.35rem;">
+            <a href="${escapeHtml(txn.InvoiceUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+              <i class="fa-solid fa-file-pdf" style="font-size: 1.1rem;"></i>
+              <span>View Invoice PDF on Google Drive</span>
+              <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem;"></i>
+            </a>
+          </div>
+        </div>
+      ` : ''}
     </div>
   `;
 
@@ -1986,7 +2092,7 @@ async function exportToPDF() {
     try {
       doc.setFillColor(255, 255, 255);
       doc.roundedRect(140, signY + 7.5, 15, 15, 1.5, 1.5, 'F');
-      doc.addImage(logoBase64, 'PNG', 140.5, signY + 8, 14, 14);
+      // doc.addImage(logoBase64, 'PNG', 140.5, signY + 8, 14, 14);
     } catch (e) { }
   }
 

@@ -426,9 +426,17 @@
           </div>
 
           <div class="form-group">
-            <label for="incomeNotes">Notes / Payer Details / Reference No</label>
+            <label for="incomeNotes">Notes / Payment Ref</label>
             <textarea id="incomeNotes" class="form-control" rows="2"
               placeholder="UPI Ref ID, Member ID, Receipt details..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="incomeInvoiceFile"><i class="fa-solid fa-paperclip" style="color: var(--brand-primary); margin-right: 4px;"></i> Attach PDF Invoice / Bill (Optional)</label>
+            <input type="file" id="incomeInvoiceFile" class="form-control" accept="application/pdf,image/*">
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">
+              Attach PDF or receipt image to automatically store in Google Drive.
+            </small>
           </div>
         </div>
 
@@ -519,6 +527,14 @@
             <label for="expenseNotes">Notes / Vendor / Voucher Ref</label>
             <textarea id="expenseNotes" class="form-control" rows="2"
               placeholder="Store name, Bill number, remarks..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="expenseInvoiceFile"><i class="fa-solid fa-paperclip" style="color: var(--expense-color); margin-right: 4px;"></i> Attach PDF Invoice / Bill (Optional)</label>
+            <input type="file" id="expenseInvoiceFile" class="form-control" accept="application/pdf,image/*">
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">
+              Attach PDF or receipt image to automatically store in Google Drive.
+            </small>
           </div>
         </div>
 
