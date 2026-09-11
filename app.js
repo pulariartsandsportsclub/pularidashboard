@@ -1777,9 +1777,6 @@ async function exportToPDF() {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  // Load club logo in Base64
-  const logoBase64 = await loadLogoBase64();
-
   // Separate Income and Expense records
   const incomeList = filtered.filter(t => (t.Type || '').toLowerCase().trim() === 'income');
   const expenseList = filtered.filter(t => (t.Type || '').toLowerCase().trim() === 'expense');
@@ -1788,36 +1785,25 @@ async function exportToPDF() {
   const totalExp = expenseList.reduce((sum, t) => sum + (parseFloat(t.Amount) || 0), 0);
   const netBal = totalInc - totalExp;
 
-  // 1. Top Header Banner (Drawn on Page 1)
+  // 1. Top Compact Header Banner (Drawn on Page 1)
   doc.setFillColor(15, 23, 42); // Slate #0f172a
-  doc.rect(0, 0, pageWidth, 38, 'F');
+  doc.rect(0, 0, pageWidth, 24, 'F');
 
   // Emerald accent stripe
   doc.setFillColor(16, 185, 129);
-  doc.rect(0, 38, pageWidth, 2.5, 'F');
+  doc.rect(0, 24, pageWidth, 1.8, 'F');
 
-  let textStartX = 14;
-  if (logoBase64) {
-    try {
-      // White rounded background container for logo
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(12, 5, 28, 28, 4, 4, 'F');
-      doc.addImage(logoBase64, 'PNG', 13, 6, 26, 26);
-      textStartX = 45;
-    } catch (err) {
-      console.warn('Could not add logo to PDF header:', err);
-    }
-  }
+  const textStartX = 10;
 
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(15);
-  doc.text('PULARI ARTS & SPORTS CLUB', textStartX, 15);
+  doc.setFontSize(12);
+  doc.text('PULARI ARTS & SPORTS CLUB', textStartX, 10);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184); // #94a3b8
-  doc.text('ANNUAL & GENERAL FINANCIAL AUDIT STATEMENT', textStartX, 22);
+  doc.text('FINANCIAL AUDIT STATEMENT REPORT', textStartX, 15);
 
   const reportDate = new Date().toLocaleDateString('en-IN', {
     day: 'numeric',
@@ -1826,9 +1812,9 @@ async function exportToPDF() {
     hour: '2-digit',
     minute: '2-digit'
   });
-  doc.text(`Generated: ${reportDate}`, textStartX, 29);
+  doc.text(`Generated: ${reportDate}`, textStartX, 20);
 
-  let currentY = 46;
+  let currentY = 30;
 
   // ==========================================
   // SECTION 1: ALL INCOME RECORDS
@@ -1849,13 +1835,13 @@ async function exportToPDF() {
 
   // Income Section Header Bar
   doc.setFillColor(6, 95, 70); // Emerald green #065f46
-  doc.roundedRect(12, currentY, pageWidth - 24, 7.5, 1.5, 1.5, 'F');
+  doc.roundedRect(10, currentY, pageWidth - 20, 6, 1, 1, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text(`1. INCOME & RECEIPTS LEDGER (${incomeList.length} Entries • Total: Rs. ${totalInc.toLocaleString('en-IN')})`, 16, currentY + 5.2);
+  doc.setFontSize(8);
+  doc.text(`1. INCOME & RECEIPTS LEDGER (${incomeList.length} Entries • Total: Rs. ${totalInc.toLocaleString('en-IN')})`, 13, currentY + 4.2);
 
-  currentY += 9.5;
+  currentY += 7.5;
 
   doc.autoTable({
     startY: currentY,
@@ -1865,43 +1851,50 @@ async function exportToPDF() {
       ['', '', `SUBTOTAL INCOME (${incomeList.length} Entries)`, '', '', '', `+ Rs. ${totalInc.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]
     ],
     theme: 'grid',
+    styles: {
+      fontSize: 7,
+      cellPadding: 1.5
+    },
     headStyles: {
       fillColor: [6, 95, 70],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 7.5,
+      fontSize: 7,
+      cellPadding: 1.5,
       halign: 'left'
     },
     bodyStyles: {
-      fontSize: 7.5,
-      textColor: [30, 41, 59]
+      fontSize: 7,
+      textColor: [30, 41, 59],
+      cellPadding: 1.5
     },
     footStyles: {
-      fillColor: [236, 253, 245], // light emerald
+      fillColor: [236, 253, 245],
       textColor: [6, 95, 70],
       fontStyle: 'bold',
-      fontSize: 8,
+      fontSize: 7.5,
+      cellPadding: 1.5,
       halign: 'right'
     },
     columnStyles: {
-      0: { cellWidth: 8, halign: 'center' },
-      1: { cellWidth: 20 },
-      2: { cellWidth: 50 },
+      0: { cellWidth: 7, halign: 'center' },
+      1: { cellWidth: 18 },
+      2: { cellWidth: 52 },
       3: { cellWidth: 28 },
       4: { cellWidth: 18 },
-      5: { cellWidth: 34 },
-      6: { cellWidth: 28, halign: 'right', fontStyle: 'bold', textColor: [6, 95, 70] }
+      5: { cellWidth: 38 },
+      6: { cellWidth: 29, halign: 'right', fontStyle: 'bold', textColor: [6, 95, 70] }
     },
-    margin: { left: 12, right: 12 }
+    margin: { left: 10, right: 10 }
   });
 
   // ==========================================
   // SECTION 2: ALL EXPENSE RECORDS
   // ==========================================
-  currentY = doc.lastAutoTable.finalY + 10;
-  if (currentY > pageHeight - 45) {
+  currentY = doc.lastAutoTable.finalY + 6;
+  if (currentY > pageHeight - 35) {
     doc.addPage();
-    currentY = 16;
+    currentY = 12;
   }
 
   const expenseRows = expenseList.map((t, idx) => [
@@ -1920,13 +1913,13 @@ async function exportToPDF() {
 
   // Expense Section Header Bar
   doc.setFillColor(153, 27, 27); // Crimson red #991b1b
-  doc.roundedRect(12, currentY, pageWidth - 24, 7.5, 1.5, 1.5, 'F');
+  doc.roundedRect(10, currentY, pageWidth - 20, 6, 1, 1, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text(`2. EXPENSES & EXPENDITURES LEDGER (${expenseList.length} Entries • Total: Rs. ${totalExp.toLocaleString('en-IN')})`, 16, currentY + 5.2);
+  doc.setFontSize(8);
+  doc.text(`2. EXPENSES & EXPENDITURES LEDGER (${expenseList.length} Entries • Total: Rs. ${totalExp.toLocaleString('en-IN')})`, 13, currentY + 4.2);
 
-  currentY += 9.5;
+  currentY += 7.5;
 
   doc.autoTable({
     startY: currentY,
@@ -1936,54 +1929,61 @@ async function exportToPDF() {
       ['', '', `SUBTOTAL EXPENSES (${expenseList.length} Entries)`, '', '', '', `- Rs. ${totalExp.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`]
     ],
     theme: 'grid',
+    styles: {
+      fontSize: 7,
+      cellPadding: 1.5
+    },
     headStyles: {
       fillColor: [153, 27, 27],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 7.5,
+      fontSize: 7,
+      cellPadding: 1.5,
       halign: 'left'
     },
     bodyStyles: {
-      fontSize: 7.5,
-      textColor: [30, 41, 59]
+      fontSize: 7,
+      textColor: [30, 41, 59],
+      cellPadding: 1.5
     },
     footStyles: {
-      fillColor: [254, 242, 242], // light red
+      fillColor: [254, 242, 242],
       textColor: [153, 27, 27],
       fontStyle: 'bold',
-      fontSize: 8,
+      fontSize: 7.5,
+      cellPadding: 1.5,
       halign: 'right'
     },
     columnStyles: {
-      0: { cellWidth: 8, halign: 'center' },
-      1: { cellWidth: 20 },
-      2: { cellWidth: 50 },
+      0: { cellWidth: 7, halign: 'center' },
+      1: { cellWidth: 18 },
+      2: { cellWidth: 52 },
       3: { cellWidth: 28 },
       4: { cellWidth: 18 },
-      5: { cellWidth: 34 },
-      6: { cellWidth: 28, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }
+      5: { cellWidth: 38 },
+      6: { cellWidth: 29, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }
     },
-    margin: { left: 12, right: 12 }
+    margin: { left: 10, right: 10 }
   });
 
   // ==========================================
   // SECTION 3: EXECUTIVE FINANCIAL SUMMARY (AT THE END)
   // ==========================================
-  currentY = doc.lastAutoTable.finalY + 12;
-  if (currentY > pageHeight - 65) {
+  currentY = doc.lastAutoTable.finalY + 6;
+  if (currentY > pageHeight - 45) {
     doc.addPage();
-    currentY = 16;
+    currentY = 12;
   }
 
   // Summary Section Header Bar
   doc.setFillColor(15, 23, 42); // Slate dark #0f172a
-  doc.roundedRect(12, currentY, pageWidth - 24, 7.5, 1.5, 1.5, 'F');
+  doc.roundedRect(10, currentY, pageWidth - 20, 6, 1, 1, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.text('3. FINAL EXECUTIVE FINANCIAL SUMMARY & NET POSITION', 16, currentY + 5.2);
+  doc.setFontSize(8);
+  doc.text('3. FINAL EXECUTIVE FINANCIAL SUMMARY & NET POSITION', 13, currentY + 4.2);
 
-  currentY += 9.5;
+  currentY += 7.5;
 
   const statusText = netBal >= 0 ? 'Surplus Fund (Positive Reserve)' : 'Deficit (Expenditure Exceeds Inflow)';
   const netSign = netBal >= 0 ? '+' : '-';
@@ -1998,20 +1998,26 @@ async function exportToPDF() {
       ['Club Financial Status', 'Account Health Indicator', statusText]
     ],
     theme: 'grid',
+    styles: {
+      fontSize: 7.5,
+      cellPadding: 1.5
+    },
     headStyles: {
       fillColor: [30, 41, 59],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 8
+      fontSize: 7.5,
+      cellPadding: 1.5
     },
     bodyStyles: {
-      fontSize: 8,
-      textColor: [30, 41, 59]
+      fontSize: 7.5,
+      textColor: [30, 41, 59],
+      cellPadding: 1.5
     },
     columnStyles: {
       0: { cellWidth: 70, fontStyle: 'bold' },
       1: { cellWidth: 50 },
-      2: { cellWidth: 66, halign: 'right', fontStyle: 'bold' }
+      2: { cellWidth: 70, halign: 'right', fontStyle: 'bold' }
     },
     didParseCell: function (data) {
       if (data.section === 'body') {
@@ -2024,104 +2030,98 @@ async function exportToPDF() {
         if (data.row.index === 2) {
           data.cell.styles.fillColor = netBal >= 0 ? [236, 253, 245] : [254, 242, 242];
           data.cell.styles.textColor = netBal >= 0 ? [6, 95, 70] : [153, 27, 27];
-          data.cell.styles.fontSize = 9;
+          data.cell.styles.fontSize = 8.5;
         }
         if (data.row.index === 3 && data.column.index === 2) {
           data.cell.styles.textColor = netBal >= 0 ? [6, 95, 70] : [153, 27, 27];
         }
       }
     },
-    margin: { left: 12, right: 12 }
+    margin: { left: 10, right: 10 }
   });
 
   // ==========================================
-  // SIGNATURES & AUTHORIZATION SEAL WITH LOGO & GREEN TICK
+  // SIGNATURES & AUTHORIZATION SEAL (COMPACT & WITHOUT LOGO IN SEAL BOX)
   // ==========================================
-  let signY = doc.lastAutoTable.finalY + 12;
-  if (signY > pageHeight - 40) {
+  let signY = doc.lastAutoTable.finalY + 8;
+  if (signY > pageHeight - 30) {
     doc.addPage();
-    signY = 20;
+    signY = 14;
   }
 
   doc.setDrawColor(203, 213, 225); // Slate 300
   doc.setLineWidth(0.3);
 
+  const boxWidth = (pageWidth - 20 - 10) / 3; // ~59.6mm per sign box
+
   // 1. Treasurer Sign Box
   doc.setFillColor(248, 250, 252);
-  doc.roundedRect(12, signY, 56, 26, 2, 2, 'FD');
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text('Prepared by:', 16, signY + 6);
-  doc.setTextColor(30, 41, 59);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('Treasurer / Admin', 16, signY + 14);
+  doc.roundedRect(10, signY, boxWidth, 20, 2, 2, 'FD');
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(100, 116, 139);
-  doc.text('Accounts Reconciled', 16, signY + 20);
+  doc.text('Prepared by:', 13, signY + 5);
+  doc.setTextColor(30, 41, 59);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text('Treasurer / Admin', 13, signY + 11);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Accounts Reconciled', 13, signY + 16);
 
   // 2. Secretary Sign Box
   doc.setFillColor(248, 250, 252);
-  doc.roundedRect(74, signY, 56, 26, 2, 2, 'FD');
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text('Verified by:', 78, signY + 6);
-  doc.setTextColor(30, 41, 59);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('Secretary / President', 78, signY + 14);
+  const box2X = 10 + boxWidth + 5;
+  doc.roundedRect(box2X, signY, boxWidth, 20, 2, 2, 'FD');
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(100, 116, 139);
-  doc.text('Executive Committee', 78, signY + 20);
+  doc.text('Verified by:', box2X + 3, signY + 5);
+  doc.setTextColor(30, 41, 59);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text('Secretary / President', box2X + 3, signY + 11);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Executive Committee', box2X + 3, signY + 16);
 
-  // 3. Official Authorization Seal & Verified Stamp (with Club Logo & Green Checkmark)
+  // 3. Official Authorization Seal (NO LOGO inside box, clean & compact)
+  const sealX = 10 + (boxWidth + 5) * 2;
   doc.setFillColor(240, 253, 244); // Light Emerald Background #f0fdf4
   doc.setDrawColor(187, 247, 208); // Light emerald border #bbf7d0
-  doc.roundedRect(136, signY, 62, 26, 2, 2, 'FD');
+  doc.roundedRect(sealX, signY, boxWidth, 20, 2, 2, 'FD');
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.8);
+  doc.setFontSize(6.5);
   doc.setTextColor(6, 95, 70);
-  doc.text('Authorization Seal:', 140, signY + 5.5);
-
-  // Seal Logo Thumbnail
-  if (logoBase64) {
-    try {
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(140, signY + 7.5, 15, 15, 1.5, 1.5, 'F');
-      // doc.addImage(logoBase64, 'PNG', 140.5, signY + 8, 14, 14);
-    } catch (e) { }
-  }
+  doc.text('Authorization Seal:', sealX + 3, signY + 4.5);
 
   // Verified Badge with green tick
-  const badgeX = logoBase64 ? 158 : 140;
-  const badgeWidth = logoBase64 ? 36 : 54;
   doc.setFillColor(16, 185, 129); // Emerald Green #10b981
-  doc.roundedRect(badgeX, signY + 7.5, badgeWidth, 6, 1.2, 1.2, 'F');
+  doc.roundedRect(sealX + 3, signY + 6.2, boxWidth - 6, 5.2, 1, 1, 'F');
 
-  // Crisp white checkmark
+  // Crisp white checkmark icon
   doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(0.55);
-  doc.line(badgeX + 6, signY + 10.5, badgeX + 7.3, signY + 12);
-  doc.line(badgeX + 7.3, signY + 12, badgeX + 9.8, signY + 9);
+  doc.setLineWidth(0.45);
+  doc.line(sealX + 13, signY + 8.8, sealX + 14.2, signY + 10);
+  doc.line(sealX + 14.2, signY + 10, sealX + 16.5, signY + 7.5);
 
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.text('VERIFIED', badgeX + (badgeWidth / 2) + 2, signY + 11.8, { align: 'center' });
+  doc.setFontSize(6.5);
+  doc.text('OFFICIALLY VERIFIED', sealX + (boxWidth / 2) + 2, signY + 9.8, { align: 'center' });
 
   doc.setTextColor(6, 95, 70);
-  doc.setFontSize(7.2);
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'bold');
-  doc.text('Pulari Arts & Sports Club', badgeX, signY + 18);
+  doc.text('Pulari Arts & Sports Club', sealX + 3, signY + 14.5);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6);
   doc.setTextColor(100, 116, 139);
-  doc.text('Official Accounts Approved', badgeX, signY + 22);
+  doc.text('Official Accounts Approved', sealX + 3, signY + 18);
 
   // ==========================================
   // FOOTER & PAGE NUMBERING (ALL PAGES)
@@ -2129,23 +2129,22 @@ async function exportToPDF() {
   const totalPages = doc.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(148, 163, 184); // #94a3b8
 
     // Footer rule line
     doc.setDrawColor(226, 232, 240);
-    doc.line(12, pageHeight - 9, pageWidth - 12, pageHeight - 9);
+    doc.line(10, pageHeight - 8, pageWidth - 10, pageHeight - 8);
 
-    doc.text('Pulari Arts & Sports Club • Confidential Financial Statement Report', 12, pageHeight - 5);
-    doc.text(`Page ${i} of ${totalPages}`, pageWidth - 26, pageHeight - 5);
+    doc.text('Pulari Arts & Sports Club • Confidential Financial Statement Report', 10, pageHeight - 4);
+    doc.text(`Page ${i} of ${totalPages}`, pageWidth - 24, pageHeight - 4);
   }
 
   const dateStr = new Date().toISOString().slice(0, 10);
   doc.save(`Pulari_Club_Statement_${dateStr}.pdf`);
   showToast(`PDF Statement exported successfully (${totalPages} page${totalPages > 1 ? 's' : ''})!`, 'success');
 }
-
 // ==========================================
 // Modal Helpers
 // ==========================================
