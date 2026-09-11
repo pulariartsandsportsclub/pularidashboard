@@ -1712,42 +1712,32 @@ function exportToExcel() {
 }
 
 // ==========================================
-// Logo Base64 Loader Helper for PDF Generation
 // ==========================================
-function loadLogoBase64() {
+// Lightweight Compressed JPEG Logo Loader Helper for PDF Header
+// Loads PULARI.jpg and compresses it via HTML5 Canvas to keep PDF file size minimal
+// ==========================================
+function loadJpgLogoBase64() {
   return new Promise((resolve) => {
-    // Check if there's already an image element in DOM
-    const existingImg = document.querySelector('.brand-logo-img') || document.querySelector('.login-logo-img');
-    if (existingImg && existingImg.complete && existingImg.naturalWidth > 0) {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = existingImg.naturalWidth;
-        canvas.height = existingImg.naturalHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(existingImg, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-        return;
-      } catch (e) {
-        // Fallback to fresh load
-      }
-    }
-
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || 200;
-        canvas.height = img.naturalHeight || 200;
+        const targetWidth = 240;
+        const targetHeight = (img.naturalHeight / img.naturalWidth) * targetWidth || 240;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, targetWidth, targetHeight);
+        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
       } catch (e) {
         resolve(null);
       }
     };
     img.onerror = () => resolve(null);
-    img.src = 'PULARI.png';
+    img.src = 'PULARI.jpg';
   });
 }
 
@@ -1777,6 +1767,9 @@ async function exportToPDF() {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
+  // Load compressed JPEG logo (PULARI.jpg) for top header only
+  const logoJpgBase64 = await loadJpgLogoBase64();
+
   // Separate Income and Expense records
   const incomeList = filtered.filter(t => (t.Type || '').toLowerCase().trim() === 'income');
   const expenseList = filtered.filter(t => (t.Type || '').toLowerCase().trim() === 'expense');
@@ -1793,11 +1786,21 @@ async function exportToPDF() {
   doc.setFillColor(16, 185, 129);
   doc.rect(0, 24, pageWidth, 1.8, 'F');
 
-  const textStartX = 10;
+  let textStartX = 10;
+  if (logoJpgBase64) {
+    try {
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(9.5, 3.5, 17, 17, 2, 2, 'F');
+      doc.addImage(logoJpgBase64, 'JPEG', 10, 4, 16, 16);
+      textStartX = 30;
+    } catch (e) {
+      console.warn('Could not render PULARI.jpg logo in header:', e);
+    }
+  }
 
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
+  doc.setFontSize(11.5);
   doc.text('PULARI ARTS & SPORTS CLUB', textStartX, 10);
 
   doc.setFont('helvetica', 'normal');
