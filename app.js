@@ -274,26 +274,21 @@ function initDates() {
 }
 
 function initTheme() {
-  const savedTheme = localStorage.getItem('pulari_theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  updateThemeIcon(savedTheme);
+  document.documentElement.setAttribute('data-theme', 'light');
+  localStorage.setItem('pulari_theme', 'light');
+  updateThemeIcon('light');
 }
 
 function updateThemeIcon(theme) {
-  if (theme === 'light') {
-    Elements.themeIcon.className = 'fa-solid fa-sun';
-  } else {
-    Elements.themeIcon.className = 'fa-solid fa-moon';
-  }
+  if (!Elements.themeIcon) return;
+  Elements.themeIcon.className = 'fa-solid fa-sun';
 }
 
 function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme');
-  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('pulari_theme', newTheme);
-  updateThemeIcon(newTheme);
-  renderCharts(); // Re-render with proper colors
+  document.documentElement.setAttribute('data-theme', 'light');
+  localStorage.setItem('pulari_theme', 'light');
+  updateThemeIcon('light');
+  renderCharts();
 }
 
 // ==========================================
@@ -306,7 +301,7 @@ function bindEvents() {
   if (Elements.togglePasswordBtn) Elements.togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
 
   // Theme & Settings
-  Elements.themeToggleBtn.addEventListener('click', toggleTheme);
+  if (Elements.themeToggleBtn) Elements.themeToggleBtn.addEventListener('click', toggleTheme);
   if (Elements.settingsModalOpenBtn) Elements.settingsModalOpenBtn.addEventListener('click', () => openModal('settingsModal'));
   Elements.refreshBtn.addEventListener('click', () => syncData(true));
 
@@ -362,6 +357,28 @@ function bindEvents() {
       renderCharts();
     });
   });
+
+  // Mobile Navigation Bottom Bar Actions
+  const mobileAddIncomeBtn = document.getElementById('mobileAddIncomeBtn');
+  const mobileAddExpenseBtn = document.getElementById('mobileAddExpenseBtn');
+  const mobileSyncBtn = document.getElementById('mobileSyncBtn');
+  const mobileLedgerBtn = document.getElementById('mobileLedgerBtn');
+  const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
+
+  if (mobileAddIncomeBtn) mobileAddIncomeBtn.addEventListener('click', () => openModal('addIncomeModal'));
+  if (mobileAddExpenseBtn) mobileAddExpenseBtn.addEventListener('click', () => openModal('addExpenseModal'));
+  if (mobileSyncBtn) mobileSyncBtn.addEventListener('click', () => syncData(true));
+  if (mobileSettingsBtn) mobileSettingsBtn.addEventListener('click', () => openModal('settingsModal'));
+  if (mobileLedgerBtn) {
+    mobileLedgerBtn.addEventListener('click', () => {
+      const ledgerSec = document.querySelector('.ledger-section');
+      if (ledgerSec) {
+        ledgerSec.scrollIntoView({ behavior: 'smooth' });
+        const searchBox = document.getElementById('searchInput');
+        if (searchBox) searchBox.focus();
+      }
+    });
+  }
 
   // Settings Modal Handlers
   Elements.saveAndTestUrlBtn.addEventListener('click', handleSaveAndTestUrl);
@@ -524,8 +541,10 @@ async function syncData(showToasts = true) {
     return;
   }
 
-  setSyncStatus('syncing', 'Syncing Sheet...');
-  Elements.refreshIcon.classList.add('fa-spin');
+  setSyncStatus('syncing', 'Connectig..');
+  if (Elements.refreshIcon) Elements.refreshIcon.classList.add('fa-spin');
+  const mobSyncIcon = document.getElementById('mobileSyncIcon');
+  if (mobSyncIcon) mobSyncIcon.classList.add('fa-spin');
 
   try {
     const response = await fetch(AppState.googleScriptUrl, {
@@ -544,7 +563,7 @@ async function syncData(showToasts = true) {
       }));
       AppState.isOnlineMode = true;
       localStorage.setItem('pulari_local_transactions', JSON.stringify(AppState.transactions));
-      setSyncStatus('online', 'Connected to Google DB');
+      setSyncStatus('online', 'Connected');
       updateDashboard();
       if (showToasts) showToast('Data synchronized successfully from Google Sheets!', 'success');
     } else {
@@ -561,7 +580,8 @@ async function syncData(showToasts = true) {
     }
     updateDashboard();
   } finally {
-    Elements.refreshIcon.classList.remove('fa-spin');
+    if (Elements.refreshIcon) Elements.refreshIcon.classList.remove('fa-spin');
+    if (mobSyncIcon) mobSyncIcon.classList.remove('fa-spin');
   }
 }
 
@@ -853,6 +873,84 @@ function renderTransactionsTable() {
   }
 }
 
+function viewTransactionDetails(txnId) {
+  const txn = AppState.transactions.find(t => String(t.ID) === String(txnId));
+  if (!txn) {
+    showToast('Transaction details not found.', 'error');
+    return;
+  }
+
+  const isIncome = (txn.Type || '').toLowerCase() === 'income';
+  const modalIcon = document.getElementById('detailModalIcon');
+  const modalTitle = document.getElementById('detailModalTitle');
+  const modalBody = document.getElementById('detailModalBody');
+
+  if (modalIcon) {
+    modalIcon.className = `modal-header-icon ${isIncome ? 'income' : 'expense'}`;
+    modalIcon.innerHTML = `<i class="fa-solid ${isIncome ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>`;
+  }
+
+  if (modalTitle) {
+    modalTitle.textContent = `${isIncome ? 'Income' : 'Expense'} Voucher #${txn.ID || ''}`;
+  }
+
+  if (modalBody) {
+    modalBody.innerHTML = `
+      <div style="background: var(--bg-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1.1rem; margin-bottom: 0.85rem; text-align: center;">
+        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.2rem;">
+          ${escapeHtml(txn.Category || 'General')}
+        </div>
+        <div style="font-size: 1.75rem; font-weight: 800; font-family: 'Red Hat Display', 'Outfit', sans-serif; color: ${isIncome ? 'var(--income-color)' : 'var(--expense-color)'};">
+          ${isIncome ? '+' : '-'}${formatCurrency(txn.Amount)}
+        </div>
+        <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-top: 0.3rem;">
+          ${escapeHtml(txn.Title || 'Untitled')}
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; font-size: 0.82rem; margin-bottom: 0.85rem;">
+        <div style="background: var(--bg-tertiary); padding: 0.65rem 0.75rem; border-radius: var(--radius-xs); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Date</div>
+          <div style="font-weight: 600; color: var(--text-primary); margin-top: 0.2rem;"><i class="fa-regular fa-calendar" style="margin-right: 4px; color: var(--brand-primary);"></i> ${formatDateDisplay(txn.Date)}</div>
+        </div>
+
+        <div style="background: var(--bg-tertiary); padding: 0.65rem 0.75rem; border-radius: var(--radius-xs); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Payment Mode</div>
+          <div style="font-weight: 600; color: var(--text-primary); margin-top: 0.2rem;"><i class="fa-solid fa-credit-card" style="margin-right: 4px; color: var(--oracle-teal);"></i> ${escapeHtml(txn.PaymentMode || 'Cash')}</div>
+        </div>
+
+        <div style="background: var(--bg-tertiary); padding: 0.65rem 0.75rem; border-radius: var(--radius-xs); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Handled By</div>
+          <div style="font-weight: 600; color: var(--text-primary); margin-top: 0.2rem;"><i class="fa-solid fa-user-check" style="margin-right: 4px; color: var(--warning-color);"></i> ${escapeHtml(txn.CreatedBy || 'Admin')}</div>
+        </div>
+
+        <div style="background: var(--bg-tertiary); padding: 0.65rem 0.75rem; border-radius: var(--radius-xs); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Ref ID</div>
+          <div style="font-weight: 600; color: var(--text-primary); margin-top: 0.2rem; font-family: monospace;">${escapeHtml(txn.ID || '-')}</div>
+        </div>
+      </div>
+
+      ${txn.Notes ? `
+        <div style="background: var(--bg-tertiary); padding: 0.65rem 0.75rem; border-radius: var(--radius-xs); border: 1px solid var(--border-subtle); margin-bottom: 0.85rem; font-size: 0.82rem;">
+          <div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.2rem;">Notes & Payer Remarks</div>
+          <div style="color: var(--text-secondary); line-height: 1.4;">${escapeHtml(txn.Notes)}</div>
+        </div>
+      ` : ''}
+
+      ${txn.InvoiceUrl ? `
+        <div style="text-align: center; margin-top: 0.5rem;">
+          <a href="${escapeHtml(txn.InvoiceUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="width: 100%; justify-content: center; min-height: 44px;">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span>View Attached PDF in Drive</span>
+          </a>
+        </div>
+      ` : ''}
+    `;
+  }
+
+  openModal('detailModal');
+}
+
 // ==========================================
 // Chart.js Visualizations
 // ==========================================
@@ -864,8 +962,9 @@ function renderCharts() {
   }
 
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-  const textColor = isLight ? '#475569' : '#94a3b8';
+  const textColor = isLight ? '#524e47' : '#c4c0b8';
   const gridColor = isLight ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)';
+  const chartFontFamily = "'Red Hat Text', 'Plus Jakarta Sans', sans-serif";
 
   const timeframeSelect = document.getElementById('chartTimeframeSelect');
   const monthsCount = timeframeSelect ? (parseInt(timeframeSelect.value, 10) || 6) : 6;
@@ -914,7 +1013,7 @@ function renderCharts() {
   const incomeData = monthLabels.map(m => monthMap[m.key].income);
   const expenseData = monthLabels.map(m => monthMap[m.key].expense);
 
-  // 1. Render Cashflow Bar Chart
+  // 1. Render Cashflow Bar Chart (Oracle Redwood)
   const cashflowCanvas = document.getElementById('cashflowChart');
   if (AppState.chartCashflow) {
     AppState.chartCashflow.destroy();
@@ -931,19 +1030,19 @@ function renderCharts() {
             {
               label: 'Income (₹)',
               data: incomeData,
-              backgroundColor: 'rgba(16, 185, 129, 0.85)',
-              borderColor: '#10b981',
+              backgroundColor: 'rgba(22, 163, 74, 0.85)',
+              borderColor: '#16a34a',
               borderWidth: 1,
-              borderRadius: 6,
+              borderRadius: 4,
               borderSkipped: false
             },
             {
               label: 'Expense (₹)',
               data: expenseData,
-              backgroundColor: 'rgba(244, 63, 94, 0.85)',
-              borderColor: '#f43f5e',
+              backgroundColor: 'rgba(199, 70, 52, 0.85)',
+              borderColor: '#c74634',
               borderWidth: 1,
-              borderRadius: 6,
+              borderRadius: 4,
               borderSkipped: false
             }
           ]
@@ -958,9 +1057,15 @@ function renderCharts() {
           plugins: {
             legend: {
               position: 'top',
-              labels: { color: textColor, font: { family: 'Plus Jakarta Sans', size: 12 } }
+              labels: { color: textColor, font: { family: chartFontFamily, size: 12, weight: '600' } }
             },
             tooltip: {
+              backgroundColor: isLight ? '#ffffff' : '#211f1d',
+              titleColor: isLight ? '#161513' : '#f7f6f3',
+              bodyColor: isLight ? '#524e47' : '#c4c0b8',
+              borderColor: isLight ? '#dedad2' : '#3a3733',
+              borderWidth: 1,
+              padding: 10,
               callbacks: {
                 label: (ctx) => ` ${ctx.dataset.label}: ₹${ctx.parsed.y.toLocaleString('en-IN')}`
               }
@@ -969,14 +1074,14 @@ function renderCharts() {
           scales: {
             x: {
               grid: { color: gridColor },
-              ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+              ticks: { color: textColor, font: { family: chartFontFamily } }
             },
             y: {
               beginAtZero: true,
               grid: { color: gridColor },
               ticks: {
                 color: textColor,
-                font: { family: 'Plus Jakarta Sans' },
+                font: { family: chartFontFamily },
                 callback: (val) => '₹' + val.toLocaleString('en-IN')
               }
             }
@@ -988,7 +1093,7 @@ function renderCharts() {
     }
   }
 
-  // 2. Prepare Category Breakdown Chart (Both Income & Expense Support)
+  // 2. Prepare Category Breakdown Chart (Oracle Redwood 8-Color Palette)
   const catType = AppState.chartCategoryType || 'all';
   const categoryChartTitle = document.getElementById('categoryChartTitle');
   const categoryChartSubtitle = document.getElementById('categoryChartSubtitle');
@@ -1017,11 +1122,12 @@ function renderCharts() {
   let categoryValues = [];
   let categoryColors = [];
 
+  // Oracle Redwood Color Palettes
   const incomePalette = [
-    '#10b981', '#059669', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#84cc16', '#22c55e'
+    '#16a34a', '#027179', '#0891b2', '#059669', '#2563eb', '#15803d', '#84cc16', '#0d9488'
   ];
   const expensePalette = [
-    '#f43f5e', '#e11d48', '#f97316', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444', '#d946ef'
+    '#c74634', '#d97706', '#dc2626', '#b45309', '#7e22ce', '#e11d48', '#9333ea', '#ea580c'
   ];
 
   if (catType === 'income') {
@@ -1066,7 +1172,7 @@ function renderCharts() {
   if (categoryLabels.length === 0) {
     categoryLabels = ['No Data Yet'];
     categoryValues = [1];
-    categoryColors = ['#94a3b8'];
+    categoryColors = ['#8c887f'];
   }
 
   if (categoryCanvas) {
@@ -1079,7 +1185,7 @@ function renderCharts() {
             data: categoryValues,
             backgroundColor: categoryColors,
             borderWidth: 2,
-            borderColor: isLight ? '#ffffff' : '#1e293b'
+            borderColor: isLight ? '#ffffff' : '#211f1d'
           }]
         },
         options: {
@@ -1090,11 +1196,17 @@ function renderCharts() {
               position: 'right',
               labels: {
                 color: textColor,
-                font: { family: 'Plus Jakarta Sans', size: 11 },
-                boxWidth: 12
+                font: { family: chartFontFamily, size: 11, weight: '500' },
+                boxWidth: 10
               }
             },
             tooltip: {
+              backgroundColor: isLight ? '#ffffff' : '#211f1d',
+              titleColor: isLight ? '#161513' : '#f7f6f3',
+              bodyColor: isLight ? '#524e47' : '#c4c0b8',
+              borderColor: isLight ? '#dedad2' : '#3a3733',
+              borderWidth: 1,
+              padding: 8,
               callbacks: {
                 label: (ctx) => ` ${ctx.label}: ₹${ctx.parsed.toLocaleString('en-IN')}`
               }

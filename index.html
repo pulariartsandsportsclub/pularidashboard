@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pulari Club - Income & Expense Admin Portal</title>
+  <title>Pulari Club - Financial Management Portal</title>
   <meta name="description"
     content="Financial management and tracking dashboard for Pulari Arts & Sports Club with Google Sheets real-time integration.">
 
-  <!--  Google Fonts & Font Awesome Icons -->
+  <!-- Google Fonts & Font Awesome Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700;800;900&family=Red+Hat+Text:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -33,12 +33,14 @@
   <!-- ================= LOGIN SCREEN OVERLAY ================= -->
   <div class="login-overlay" id="loginOverlay">
     <div class="login-card">
+      <div class="login-oracle-stripe"></div>
       <div class="login-header">
         <div class="login-logo-wrap">
           <img src="PULARI.png" alt="Pulari Club Logo" class="login-logo-img">
         </div>
+        <div class="oracle-tag-badge">FINANCIAL ADMIN SYSTEM</div>
         <h2 class="login-title">PULARI ARTS & SPORTS CLUB</h2>
-        <p class="login-subtitle">Admin Financial Portal</p>
+        <p class="login-subtitle">Cloud Financial Administration System</p>
       </div>
 
       <form id="loginForm" class="login-form">
@@ -68,17 +70,21 @@
 
         <button type="submit" class="btn btn-primary login-btn" id="loginSubmitBtn">
           <i class="fa-solid fa-right-to-bracket"></i>
-          <span>Sign In to Dashboard</span>
+          <span>Sign In to Admin Portal</span>
         </button>
       </form>
 
       <div class="login-footer">
+        <div class="oracle-system-pill"><i class="fa-solid fa-shield-halved"></i> Secured Database • Kerala South</div>
         <span>Protected Admin System • Pulari Arts & Sports Club</span>
       </div>
     </div>
   </div>
 
   <div class="app-wrapper" id="appMainWrapper" style="display: none;">
+    <!-- Global Top Accent Bar -->
+    <div class="oracle-top-accent-bar"></div>
+
     <main class="main-content">
 
       <!-- Top Navigation Bar -->
@@ -87,9 +93,15 @@
           <div class="brand-logo-badge">
             <img src="PULARI.png" alt="Pulari Arts & Sports Club Logo" class="brand-logo-img">
           </div>
-          <div>
-            <h1 class="brand-title">PULARI ARTS & SPORTS CLUB</h1>
-            <div class="brand-subtitle">Financial Admin Dashboard</div>
+          <div class="brand-info-wrap">
+            <div class="brand-top-row">
+              <h1 class="brand-title">PULARI ARTS & SPORTS CLUB</h1>
+            </div>
+            <div class="brand-subtitle">
+              <span class="oracle-crumb-root">Admin Console</span>
+              <span class="oracle-crumb-sep">/</span>
+              <span>Treasury & Accounts Ledger</span>
+            </div>
           </div>
         </div>
 
@@ -99,12 +111,8 @@
             <span id="syncStatusText">Connecting...</span>
           </div>
 
-          <button class="btn btn-secondary btn-icon-only" id="refreshBtn" title="Sync now with Google Sheets">
+          <button class="btn btn-secondary btn-icon-only" id="refreshBtn" title="Refresh data">
             <i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i>
-          </button>
-
-          <button class="btn btn-secondary btn-icon-only" id="themeToggleBtn" title="Toggle Light/Dark Theme">
-            <i class="fa-solid fa-moon" id="themeIcon"></i>
           </button>
 
           <button class="btn btn-secondary btn-icon-only" id="logoutBtn" title="Logout from Admin Dashboard">
@@ -116,7 +124,10 @@
       <!-- Action Banner & Greeting -->
       <section class="action-banner">
         <div class="section-greeting">
-          <h2>Financial Overview</h2>
+          <div class="section-badge-row">
+            <span class="oracle-section-tag"><i class="fa-solid fa-chart-pie"></i> FINANCIAL MANAGEMENT</span>
+          </div>
+          <h2>Financial Overview & Analytics</h2>
           <p id="currentDateDisplay">Real-time ledger and accounts management</p>
         </div>
 
@@ -133,12 +144,12 @@
 
           <button class="btn btn-secondary" id="exportExcelBtn"
             title="Download Excel (.xlsx) spreadsheet with Income & Expenses tabs">
-            <i class="fa-solid fa-file-excel" style="color: #10b981;"></i>
+            <i class="fa-solid fa-file-excel" style="color: var(--income-color);"></i>
             <span>Export Excel</span>
           </button>
 
           <button class="btn btn-secondary" id="exportPdfBtn" title="Generate and download formatted PDF statement">
-            <i class="fa-solid fa-file-pdf" style="color: #f43f5e;"></i>
+            <i class="fa-solid fa-file-pdf" style="color: var(--expense-color);"></i>
             <span>Export PDF</span>
           </button>
         </div>
@@ -354,6 +365,34 @@
       </footer>
 
     </main>
+
+    <!-- Mobile Floating Bottom Navigation & Quick Action Bar -->
+    <nav class="mobile-bottom-bar" id="mobileBottomBar" aria-label="Mobile Navigation">
+      <button type="button" class="mobile-nav-item btn-mobile-income" id="mobileAddIncomeBtn" title="Add Income">
+        <i class="fa-solid fa-circle-plus"></i>
+        <span>Income</span>
+      </button>
+
+      <button type="button" class="mobile-nav-item btn-mobile-expense" id="mobileAddExpenseBtn" title="Add Expense">
+        <i class="fa-solid fa-circle-minus"></i>
+        <span>Expense</span>
+      </button>
+
+      <button type="button" class="mobile-nav-item" id="mobileSyncBtn" title="Sync with Google Sheets">
+        <i class="fa-solid fa-arrows-rotate" id="mobileSyncIcon"></i>
+        <span>Sync</span>
+      </button>
+
+      <button type="button" class="mobile-nav-item" id="mobileLedgerBtn" title="View Transaction Ledger">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Ledger</span>
+      </button>
+
+      <button type="button" class="mobile-nav-item" id="mobileSettingsBtn" title="Google Sheets Setup">
+        <i class="fa-solid fa-database"></i>
+        <span>Config</span>
+      </button>
+    </nav>
   </div>
 
   <!-- ================= MODALS ================= -->
@@ -361,6 +400,7 @@
   <!-- 1. Add Income Modal -->
   <div class="modal-backdrop" id="addIncomeModal">
     <div class="modal-content">
+      <div class="modal-drag-handle"></div>
       <div class="modal-header">
         <div class="modal-title-wrap">
           <div class="modal-header-icon income">
@@ -377,7 +417,7 @@
             <div class="amount-input-wrap">
               <span class="currency-symbol">₹</span>
               <input type="number" id="incomeAmount" class="form-control" placeholder="0.00" step="0.01" min="1"
-                required>
+                inputmode="decimal" required>
             </div>
           </div>
 
@@ -456,6 +496,7 @@
   <!-- 2. Add Expense Modal -->
   <div class="modal-backdrop" id="addExpenseModal">
     <div class="modal-content">
+      <div class="modal-drag-handle"></div>
       <div class="modal-header">
         <div class="modal-title-wrap">
           <div class="modal-header-icon expense">
@@ -472,7 +513,7 @@
             <div class="amount-input-wrap">
               <span class="currency-symbol">₹</span>
               <input type="number" id="expenseAmount" class="form-control" placeholder="0.00" step="0.01" min="1"
-                required>
+                inputmode="decimal" required>
             </div>
           </div>
 
@@ -556,6 +597,7 @@
   <!-- 3. Google Sheets Settings & Integration Modal -->
   <div class="modal-backdrop" id="settingsModal">
     <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-drag-handle"></div>
       <div class="modal-header">
         <div class="modal-title-wrap">
           <div class="modal-header-icon settings">
@@ -624,6 +666,7 @@
   <!-- 4. Transaction Detail Modal -->
   <div class="modal-backdrop" id="detailModal">
     <div class="modal-content">
+      <div class="modal-drag-handle"></div>
       <div class="modal-header">
         <div class="modal-title-wrap">
           <div class="modal-header-icon" id="detailModalIcon">
