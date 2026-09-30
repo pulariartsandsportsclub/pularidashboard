@@ -541,7 +541,7 @@ async function syncData(showToasts = true) {
     return;
   }
 
-  setSyncStatus('syncing', 'Connectig..');
+  setSyncStatus('syncing', 'Connecting...');
   if (Elements.refreshIcon) Elements.refreshIcon.classList.add('fa-spin');
   const mobSyncIcon = document.getElementById('mobileSyncIcon');
   if (mobSyncIcon) mobSyncIcon.classList.add('fa-spin');
@@ -848,8 +848,8 @@ function renderTransactionsTable() {
             ${escapeHtml(t.PaymentMode || 'Cash')}
           </span>
         </td>
-        <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(t.Notes || '')}">
-          ${escapeHtml(t.Notes || '-')}
+        <td class="${t.Notes && t.Notes.trim() !== '-' && t.Notes.trim() !== '' ? 'txn-notes-cell' : 'txn-notes-empty'}" title="${escapeHtml(t.Notes || '')}">
+          ${t.Notes && t.Notes.trim() !== '-' && t.Notes.trim() !== '' ? escapeHtml(t.Notes) : '<span style="opacity: 0.4;">-</span>'}
         </td>
         <td style="text-align: right;">
           <span class="${amountClass}">${amountSign}${formatCurrency(t.Amount)}</span>
