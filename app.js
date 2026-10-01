@@ -194,12 +194,10 @@ const Elements = {
   statTotalIncome: document.getElementById('statTotalIncome'),
   statTotalExpense: document.getElementById('statTotalExpense'),
   statNetBalance: document.getElementById('statNetBalance'),
-  statThisMonthNet: document.getElementById('statThisMonthNet'),
   incomeCountLabel: document.getElementById('incomeCountLabel'),
   expenseCountLabel: document.getElementById('expenseCountLabel'),
   netBalanceBadge: document.getElementById('netBalanceBadge'),
   netStatusText: document.getElementById('netStatusText'),
-  statTotalTxnCount: document.getElementById('statTotalTxnCount'),
 
   // Charts
   cashflowChartCanvas: document.getElementById('cashflowChart'),
@@ -606,37 +604,27 @@ function calculateTotals() {
   let incomeCount = 0;
   let expenseCount = 0;
 
-  const currentMonthStr = new Date().toISOString().slice(0, 7); // e.g., "2026-09"
-  let currentMonthIncome = 0;
-  let currentMonthExpense = 0;
-
   AppState.transactions.forEach(t => {
     const amount = parseFloat(t.Amount) || 0;
-    const isThisMonth = (t.Date || '').startsWith(currentMonthStr);
 
     if (t.Type && t.Type.toLowerCase() === 'income') {
       totalIncome += amount;
       incomeCount++;
-      if (isThisMonth) currentMonthIncome += amount;
     } else if (t.Type && t.Type.toLowerCase() === 'expense') {
       totalExpense += amount;
       expenseCount++;
-      if (isThisMonth) currentMonthExpense += amount;
     }
   });
 
   const netBalance = totalIncome - totalExpense;
-  const thisMonthNet = currentMonthIncome - currentMonthExpense;
 
   // Format currency
   Elements.statTotalIncome.textContent = formatCurrency(totalIncome);
   Elements.statTotalExpense.textContent = formatCurrency(totalExpense);
   Elements.statNetBalance.textContent = formatCurrency(netBalance);
-  Elements.statThisMonthNet.textContent = formatCurrency(thisMonthNet);
 
   Elements.incomeCountLabel.textContent = `${incomeCount} Inflow Entries`;
   Elements.expenseCountLabel.textContent = `${expenseCount} Outflow Entries`;
-  Elements.statTotalTxnCount.textContent = `${AppState.transactions.length} total txns`;
 
   // Net Balance badge formatting
   if (netBalance >= 0) {
@@ -826,42 +814,44 @@ function renderTransactionsTable() {
     const iconClass = isIncome ? 'income' : 'expense';
 
     rowsHtml += `
-      <tr>
-        <td>
+      <tr class="txn-row ${isIncome ? 'txn-income-row' : 'txn-expense-row'}">
+        <td class="td-title">
           <div class="txn-title-cell">
             <div class="txn-type-icon ${iconClass}">
               <i class="fa-solid ${typeIcon}"></i>
             </div>
-            <div>
+            <div class="txn-title-text-wrap">
               <span class="txn-title-main">${escapeHtml(t.Title || 'Untitled')}</span>
               <span class="txn-id-sub">${escapeHtml(t.ID || '')}</span>
             </div>
           </div>
         </td>
-        <td>
+        <td class="td-category">
           <span class="badge badge-category">${escapeHtml(t.Category || 'General')}</span>
         </td>
-        <td>${formatDateDisplay(t.Date)}</td>
-        <td>
+        <td class="td-date">
+          <span class="txn-date-chip">${formatDateDisplay(t.Date)}</span>
+        </td>
+        <td class="td-mode">
           <span class="badge badge-mode">
             <i class="fa-solid fa-credit-card" style="font-size: 0.7rem; margin-right: 4px;"></i>
             ${escapeHtml(t.PaymentMode || 'Cash')}
           </span>
         </td>
-        <td class="${t.Notes && t.Notes.trim() !== '-' && t.Notes.trim() !== '' ? 'txn-notes-cell' : 'txn-notes-empty'}" title="${escapeHtml(t.Notes || '')}">
+        <td class="td-notes ${t.Notes && t.Notes.trim() !== '-' && t.Notes.trim() !== '' ? 'txn-notes-cell' : 'txn-notes-empty'}" title="${escapeHtml(t.Notes || '')}">
           ${t.Notes && t.Notes.trim() !== '-' && t.Notes.trim() !== '' ? escapeHtml(t.Notes) : '<span style="opacity: 0.4;">-</span>'}
         </td>
-        <td style="text-align: right;">
+        <td class="td-amount">
           <span class="${amountClass}">${amountSign}${formatCurrency(t.Amount)}</span>
         </td>
-        <td style="text-align: center; white-space: nowrap;">
+        <td class="td-actions">
           ${t.InvoiceUrl ? `
-            <a href="${escapeHtml(t.InvoiceUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon-only" style="width: 32px; height: 32px; color: #ef4444; margin-right: 4px;" title="View Invoice PDF in Google Drive">
-              <i class="fa-solid fa-file-pdf" style="font-size: 0.85rem;"></i>
+            <a href="${escapeHtml(t.InvoiceUrl)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-icon-only" style="width: 36px; height: 36px; color: #ef4444; margin-right: 4px;" title="View Invoice PDF in Google Drive">
+              <i class="fa-solid fa-file-pdf" style="font-size: 0.9rem;"></i>
             </a>
           ` : ''}
-          <button class="btn btn-secondary btn-icon-only" style="width: 32px; height: 32px;" onclick="viewTransactionDetails('${t.ID}')" title="View Details">
-            <i class="fa-solid fa-eye" style="font-size: 0.8rem;"></i>
+          <button type="button" class="btn btn-secondary btn-icon-only" style="width: 36px; height: 36px;" onclick="viewTransactionDetails('${t.ID}')" title="View Details">
+            <i class="fa-solid fa-eye" style="font-size: 0.85rem;"></i>
           </button>
         </td>
       </tr>
