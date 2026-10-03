@@ -1844,6 +1844,126 @@ function loadJpgLogoBase64() {
 }
 
 // ==========================================
+// Malayalam support for PDF export
+// jsPDF cannot shape Malayalam (conjuncts / vowel signs), so any table cell
+// containing Malayalam is drawn through the browser's text engine (canvas)
+// using Noto Sans Malayalam and placed in the PDF as a crisp image.
+// ==========================================
+const ML_REGEX = /[\u0D00-\u0D7F]/;
+const ML_FONT_FAMILY = 'PulariNotoMalayalam';
+const ML_CANVAS_STACK = `'${ML_FONT_FAMILY}', 'Noto Sans Malayalam', 'Nirmala UI', 'Kartika', Helvetica, Arial, sans-serif`;
+const ML_COL_WIDTHS = [7, 18, 52, 28, 18, 38, 29]; // must match ledger columnStyles
+const ML_PX_PER_MM = 12;                           // ~300 dpi
+let _mlFontPromise = null;
+
+function hasMalayalam(str) {
+  return ML_REGEX.test(String(str == null ? '' : str));
+}
+
+function loadMalayalamFont() {
+  if (_mlFontPromise) return _mlFontPromise;
+  _mlFontPromise = (async () => {
+    try {
+      if (!window.FontFace || !document.fonts) return;
+      let source = null;
+      if (window.MALAYALAM_FONT_REGULAR) {
+        const bin = atob(window.MALAYALAM_FONT_REGULAR);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        source = bytes.buffer;
+      } else {
+        source = 'url(NotoSansMalayalam-Regular.ttf)';
+      }
+      const face = new FontFace(ML_FONT_FAMILY, source);
+      await face.load();
+      document.fonts.add(face);
+    } catch (e) {
+      console.warn('Malayalam font load failed, using system fallback fonts:', e);
+    }
+  })();
+  return _mlFontPromise;
+}
+
+// Split text into lines that fit maxWidthPx (word wrap, grapheme-safe hard break)
+function wrapMalayalamText(ctx, text, maxWidthPx) {
+  const segmenter = (typeof Intl !== 'undefined' && Intl.Segmenter) ? new Intl.Segmenter('ml', { granularity: 'grapheme' }) : null;
+  const graphemes = (w) => segmenter ? Array.from(segmenter.segment(w), x => x.segment) : Array.from(w);
+  const lines = [];
+  String(text).split(/\r?\n/).forEach(paragraph => {
+    const words = paragraph.split(/\s+/).filter(Boolean);
+    let line = '';
+    words.forEach(word => {
+      const test = line ? line + ' ' + word : word;
+      if (ctx.measureText(test).width <= maxWidthPx) {
+        line = test;
+        return;
+      }
+      if (line) { lines.push(line); line = ''; }
+      if (ctx.measureText(word).width <= maxWidthPx) {
+        line = word;
+      } else {
+        let chunk = '';
+        graphemes(word).forEach(g => {
+          if (chunk && ctx.measureText(chunk + g).width > maxWidthPx) { lines.push(chunk); chunk = g; }
+          else chunk += g;
+        });
+        line = chunk;
+      }
+    });
+    lines.push(line);
+  });
+  return lines.length ? lines : [''];
+}
+
+// autoTable didParseCell hook: reserve height for Malayalam cells
+function mlParseCell(data) {
+  if (data.section !== 'body') return;
+  const raw = data.cell.raw;
+  if (!hasMalayalam(raw)) return;
+  const colW = ML_COL_WIDTHS[data.column.index];
+  if (!colW) return;
+
+  const fontPt = data.cell.styles.fontSize || 7;
+  const fontMM = fontPt * 0.3528;
+  const pad = (typeof data.cell.padding === 'function') ? data.cell.padding('left') : 1.5;
+  const padV = (typeof data.cell.padding === 'function') ? data.cell.padding('top') : 1.5;
+  const innerW = colW - pad * 2;
+  const lineH = fontMM * 1.6;
+
+  const c = document.createElement('canvas');
+  const ctx = c.getContext('2d');
+  ctx.font = `${fontMM * ML_PX_PER_MM}px ${ML_CANVAS_STACK}`;
+  const lines = wrapMalayalamText(ctx, raw, innerW * ML_PX_PER_MM);
+
+  data.cell._ml = { lines, fontMM, lineH, innerW, pad, padV };
+  data.cell.text = lines.map(() => ' ');
+  data.cell.styles.minCellHeight = lines.length * lineH + padV * 2;
+}
+
+// autoTable didDrawCell hook: paint the shaped Malayalam text image
+function mlDrawCell(doc, data) {
+  const ml = data.cell._ml;
+  if (!ml) return;
+  const wPx = Math.ceil(ml.innerW * ML_PX_PER_MM);
+  const hPx = Math.ceil(ml.lines.length * ml.lineH * ML_PX_PER_MM);
+  const c = document.createElement('canvas');
+  c.width = wPx;
+  c.height = hPx;
+  const ctx = c.getContext('2d');
+  ctx.font = `${ml.fontMM * ML_PX_PER_MM}px ${ML_CANVAS_STACK}`;
+  ctx.fillStyle = '#1e293b';
+  ctx.textBaseline = 'middle';
+  ml.lines.forEach((line, i) => {
+    ctx.fillText(line, 0, (i + 0.5) * ml.lineH * ML_PX_PER_MM);
+  });
+  try {
+    doc.addImage(c.toDataURL('image/png'), 'PNG', data.cell.x + ml.pad, data.cell.y + ml.padV, ml.innerW, ml.lines.length * ml.lineH, undefined, 'FAST');
+  } catch (e) {
+    console.warn('Could not draw Malayalam cell:', e);
+  }
+}
+
+// ==========================================
 // PDF Statement Export (jsPDF + AutoTable)
 // Structure: 1. All Incomes -> 2. All Expenses -> 3. Executive Summary + Verified Seal
 // ==========================================
@@ -1871,6 +1991,11 @@ async function exportToPDF() {
 
   // Load compressed JPEG logo (PULARI.jpg) for top header only
   const logoJpgBase64 = await loadJpgLogoBase64();
+
+  // Preload Malayalam font only when the report actually contains Malayalam text
+  if (filtered.some(t => hasMalayalam(t.Title) || hasMalayalam(t.Category) || hasMalayalam(t.Notes) || hasMalayalam(t.PaymentMode))) {
+    await loadMalayalamFont();
+  }
 
   // Separate Income and Expense records
   const incomeList = filtered.filter(t => (t.Type || '').toLowerCase().trim() === 'income');
@@ -1990,6 +2115,8 @@ async function exportToPDF() {
       5: { cellWidth: 38 },
       6: { cellWidth: 29, halign: 'right', fontStyle: 'bold', textColor: [6, 95, 70] }
     },
+    didParseCell: mlParseCell,
+    didDrawCell: (data) => mlDrawCell(doc, data),
     margin: { left: 10, right: 10 }
   });
 
@@ -2068,6 +2195,8 @@ async function exportToPDF() {
       5: { cellWidth: 38 },
       6: { cellWidth: 29, halign: 'right', fontStyle: 'bold', textColor: [225, 29, 72] }
     },
+    didParseCell: mlParseCell,
+    didDrawCell: (data) => mlDrawCell(doc, data),
     margin: { left: 10, right: 10 }
   });
 
